@@ -1,0 +1,11 @@
+# folder
+node_modules
+.idea
+models/sql-models
+
+# file
+.env
+mandorin.sqlite
+notes.txt
+utils/db.js
+utils/db-schema.js
