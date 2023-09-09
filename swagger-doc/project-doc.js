@@ -363,19 +363,24 @@
 
 
 
-// * PATCH /projects/:id_project/done
+// * PATCH /projects/done
 /**
  * @swagger
- * /projects/{id_project}/done:
+ * /projects/done:
  *   patch:
  *     summary: Ubah status proyek menjadi telah selesai
  *     tags: [Project]
  *     security:
  *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id_project
- *         description: id_project yang ingin diubah statusnya bahwa proyek telah selesai
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               id_project:
+ *                 type: string
  *
  *     responses:
  *       '200':
@@ -433,19 +438,15 @@
 
 
 
-// * PATCH /projects/:id_project
+// * PATCH /projects
 /**
  * @swagger
- * /projects/{id_project}:
+ * /projects:
  *   patch:
  *     summary: Edit informasi project
  *     tags: [Project]
  *     security:
  *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id_project
- *         description: id_project yang ingin diubah datanya
  *     requestBody:
  *       required: true
  *       content:

@@ -12,6 +12,7 @@ const Project = require('../models/project')
 const Workhour = require('../models/workhour')
 const Day = require('../models/day')
 const User = require('../models/user')
+const Weather = require('../models/weather')
 
 // * ------------------------------ FUNCTION ------------------------------ * //
 
@@ -55,21 +56,6 @@ function project_formatted(data) {
         on_track: data.on_track,
         //workers: data.workers,
         //daily_notes: data.daily_notes
-    }
-}
-
-
-function is_superadmin_or_admin_pm(req, pm_id) {
-    if(req.role !== 1 && (req.user_id.toString() !== pm_id.toString())) {
-        throw_err("Akun tidak punya akses", statusCode['404_not_found'])
-    }
-}
-
-
-// * fungsi untuk filtering -> ketika daily confirmation = true -> maka data pada hari tersebut sudah tidak bisa di edit lagi
-function is_daily_confirmation_true(daily_note){
-    if(daily_note.daily_confirmation){
-        throw_err("Data harian sudah dikunci, edit tidak bisa dilakukan", statusCode['401_unauthorized'])
     }
 }
 
@@ -297,10 +283,19 @@ exports.create_project = async (req, res, next) => {
             }
         }
 
+        // ? ------------------ buat Daily Weather Document sebelum save project baru ------------------
+
+        const new_weather = new Weather({
+            id_project : new_project._id.toString()
+        })
+
+        // ? ---------------------- --------------------------------------------- ----------------------
+
         // * kemudian sebelum save project baru juga ubah/ tambah data project yang dikerjakan oleh pm
         user_pm.projects.push(new_project._id)
         await new_project.save()
         await user_pm.save()
+        await new_weather.save()
 
         res.status(statusCode['200_ok']).json({
             errors: false,
@@ -325,7 +320,7 @@ exports.done_project = async (req, res, next) => {
             * sekarang dibuat -> hanya bisa dilakukan/ akses oleh PM/ super admin
          */
 
-        const project = await Project.findById(req.params.id_project)
+        const project = await Project.findById(req.body.id_project)
         if(!project){
             throw_err("Data tidak ditemukan", statusCode['404_not_found'])
         }
@@ -351,8 +346,11 @@ exports.done_project = async (req, res, next) => {
         /*
             * catatan
             * mungkin nantinya ketika project selesai bisa berikan tambahan properti -> misal ada catatan selama project dikerjakan dll.
+            *
+            ! juga ketika project selesai maka nanti harusnya
+            * unlink data id project di workers/user/ role = 3
+            * hapus data pm pada array di pm/user/role = 2
          */
-
         // * ----------------------
 
         await project.save()
@@ -376,6 +374,7 @@ exports.done_project = async (req, res, next) => {
 
 exports.edit_project = async (req, res, next) => {
     try{
+        const id_project = req.body.id_project
         const nama = req.body.nama
         const dscription = req.body.description
         const target = req.body.target
@@ -415,281 +414,3 @@ exports.delete_project = async (req, res, next) => {
     }
 }
 
-
-
-// * -------------------------------- PROJECT DAILY NOTES ------------------------------ * //
-
-exports.workers_post_notes = async (req, res, next) => {
-    try{
-        const data = req.body.data
-        const id_project = req.body.id_project
-        // ! --------------------------- FILTER & AUTH USER --------------------------- * //
-        const workers = await User.findById(req.user_id)
-        if(!workers){
-            throw_err("Token Error, Akun tidak ditemukan", statusCode['404_not_found'])
-        }
-
-        const project = await Project.findById(id_project)
-        if(!project){
-            throw_err("Data project tidak ditemukan", statusCode['404_not_found'])
-        }
-
-        // * cek user terlibat dalam project terkait atau tidak
-        if(workers.id_project !== project._id.toString()){
-            throw_err("User tidak terlibat dalam project terkait", statusCode['401_unauthorized'])
-        }
-        // ! --------------------------- ----------------- --------------------------- * //
-
-        // * hanya bisa mengisi daily notes dari data hari tersebut
-        const today_date = new Date()
-        const formatted_date = format_date(today_date, "yyyy-MM-dd")
-
-        for (data_notes of project.daily_notes){
-            if(data_notes.date.toString() === formatted_date.toString()){
-                // * tidak bisa edit/ tambah ketika daily confirmation sudah true
-                if(data_notes.daily_confirmation === true){
-                    throw_err("Catatan harian sudah ditutup", statusCode['401_unauthorized'])
-                }
-
-                // ! filter tambahan--> cek daily confirmation sudah TRUE belum
-                is_daily_confirmation_true(data_notes)
-
-                // * cari apakah sudah buat notes atau belum, jika belum maka buat dan jika sudah maka hanya update notes terkait
-                let is_create = false
-                for(note of data_notes.workers_notes){
-                    if(note.id_user.toString() === req.user_id){
-                        // * karena ada -> maka update saja
-                        note.data = data
-                        is_create = true
-                        break
-                    }
-                }
-
-                if(is_create) {
-                    break
-                } else {
-                    // * tidak ditemukan, maka buat data baru
-                    const worker_note = {
-                        id_user : req.user_id,
-                        data : data
-                    }
-                    data_notes.workers_notes.push(worker_note)
-                }
-            }
-        }
-
-        // * simpan worker note
-        await project.save()
-
-        res.status(statusCode['200_ok']).json({
-            errors: false,
-            message: "Workers berhasil post daily notes"
-        })
-
-    } catch (e) {
-        if(!e.statusCode){
-            e.statusCode = statusCode['500_internal_server_error']
-        }
-        next(e)
-    }
-}
-
-
-
-
-exports.daily_confirmation_done = exports.template = async (req, res, next) => {
-    try{
-        /*
-            * catatan
-            * untuk sekarang ADMIN hanya bisa konfirmasi
-            * SUPERADMIN juga hanya bisa BATALKAN
-         */
-
-        // ! --------------------------- FILTER & AUTH USER --------------------------- * //
-        // * jika request bukan admin dan juga bukan superadmin
-        if(req.role === 3 ){
-            throw_err("Akun tidak punya akses", statusCode['404_not_found'])
-        }
-
-        const user = await User.findById(req.user_id)
-        if(!user){
-            throw_err("Token error, akun tidak ditemukan", statusCode['401_unauthorized'])
-        }
-
-        const project = await Project.findById(req.body.id_project)
-        if(!project){
-            throw_err("Data tidak ditemukan", statusCode['404_not_found'])
-        }
-
-        // * cek jika bukan superadmin dan juga bukan admin dari project terkait
-        is_superadmin_or_admin_pm(req, project.id_pm.toString())
-        // ! --------------------------- ----------------- --------------------------- * //
-
-        // * cari daily notes hari ini
-        const today_date = new Date()
-        const formatted_date = format_date(today_date, "yyyy-MM-dd")
-
-        for (note of project.daily_notes){
-            if(note.date.toString() === formatted_date.toString()){
-                // * lakukan pengecekan sesuai role yang diharapkan
-                if(req.role === 1){
-                    if(note.daily_confirmation === false){
-                        throw_err("SuperAdmin hanya bisa membatalkan konfirmasi harian", statusCode['401_unauthorized'])
-                    }
-                    note.daily_confirmation = false
-                } else {
-                    if(note.daily_confirmation === true){
-                        throw_err("Sudah dilakukan konfirmasi harian, Project Manager hanya bisa melakukan konfirmasi harian", statusCode['401_unauthorized'])
-                    }
-                    note.daily_confirmation = true
-                }
-            }
-        }
-
-        await project.save()
-
-        res.status(statusCode['200_ok']).json({
-            errors: false,
-            message: "Berhasil ubah status daily notes"
-        })
-    } catch (e) {
-        if(!e.statusCode){
-            e.statusCode = statusCode['500_internal_server_error']
-        }
-        next(e)
-    }
-}
-
-
-
-
-exports.post_incomes_expenses = exports.template = async (req, res, next) => {
-    try{
-        const ket = req.params.finance
-        const total = req.body.total
-        const data_post = req.body.data
-        const id_project = req.body.id_project
-
-        // ! --------------------------- FILTER & AUTH USER --------------------------- * //
-        const project = await Project.findById(id_project)
-        if(!project) {
-            throw_err("Data tidak ditemukan", statusCode['404_not_found'])
-        }
-
-        // * cek jika bukan super admin atau admin dari project terkait
-        is_superadmin_or_admin_pm(req, project.id_pm)
-        // ! --------------------------- ----------------- --------------------------- * //
-
-        const today_date = new Date()
-        const formatted_date = format_date(today_date, "yyyy-MM-dd")
-
-        // * get day now -> dengan iterasi ke semua daily notes terkait
-        project.daily_notes.forEach(data => {
-            if(data.date.toString() == formatted_date.toString()){
-
-                // ! filter tambahan--> cek daily confirmation sudah TRUE belum
-                is_daily_confirmation_true(data_notes)
-
-                if(ket === 'expenses'){
-                    data.expenses.data = data_post // string keterangan total harian
-                    data.expenses.total = total // number total pengeluarn
-                } else if(ket === 'incomes'){
-                    data.incomes.data = data_post
-                    data.incomes.total = total
-                }
-            }
-        })
-
-        await project.save()
-
-        res.status(statusCode['200_ok']).json({
-            errors: false,
-            message: "Berhasil update keunagan daily notes"
-        })
-
-    } catch (e) {
-        if(!e.statusCode){
-            e.statusCode = statusCode['500_internal_server_error']
-        }
-        next(e)
-    }
-}
-
-
-
-
-
-exports.post_dailynotes = async (req, res, next) => {
-    try{
-        const id_project = req.body.id_project
-
-        // * --------------------------- FILTER & AUTH USER --------------------------- * //
-        const project = await Project.findById(id_project)
-        if(!project){
-            throw_err("Data tidak ditemukan", statusCode['404_not_found'])
-        }
-
-        // * hanya bisa diakses oleh superadmn dan admin project saja
-        is_superadmin_or_admin_pm(req, project.id_pm)
-        // * --------------------------- ----------------- --------------------------- * //
-
-        // * objek daily notes baru
-        const this_day_date = new Date()
-        const formatted_date = format_date(this_day_date, "yyyy-MM-dd").toString()
-
-        // * cek apakah sudah pernah ajukan buat daily notes hari ini (untuk jaga jaga) jika sudah ada maka akan gagal
-        project.daily_notes.forEach(data => {
-            if(data.date.toString() === formatted_date.toString()){
-                throw_err("Hari ini sudah buat daily-notes", statusCode['400_bad_request'])
-            }
-        })
-
-        const new_daily_notes = new BaseDailyNotes(formatted_date)
-        //* tambah terkait absen
-        new_daily_notes.attendances = []
-        //* tambah data worker ke daily notes
-        project.workers.forEach(id_workers => {
-            const data_attendance = {
-                id_user : id_workers,
-                attendances : false // * default value belum absen
-            }
-            new_daily_notes.attendances.push(data_attendance)
-        })
-
-        // * tambah data daily notes baru ke project
-        project.daily_notes.push(new_daily_notes)
-        await project.save()
-
-        res.status(statusCode['200_ok']).json({
-            errors: false,
-            message: "Berhasil buat daily notes baru"
-        })
-
-    } catch (e) {
-        if(!e.statusCode){
-            e.statusCode = statusCode['500_internal_server_error']
-        }
-        next(e)
-    }
-}
-
-
-
-
-
-exports.template = async (req, res, next) => {
-    try{
-
-
-        res.status(statusCode['200_ok']).json({
-            errors: false,
-            message: "Berhasil buat daily notes baru"
-        })
-
-    } catch (e) {
-        if(!e.statusCode){
-            e.statusCode = statusCode['500_internal_server_error']
-        }
-        next(e)
-    }
-}

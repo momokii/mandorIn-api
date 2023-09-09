@@ -52,6 +52,13 @@ exports.get_days = async (req, res, next) => {
             return data.substring(index_T + 1)
         })
 
+        // * summary data jika diperlukan, jadi buat embedded array yang berisi array dari 3 elemen
+        const summary = []
+        for(i = 0; i < hourly_str.length; i++){
+            const data = [hourly_str[i], temperature[i], precipitation_prob[i]]
+            summary.push(data)
+        }
+
         // response formatted
         const weather_forecast = {
             timezone : timezone,
@@ -66,6 +73,7 @@ exports.get_days = async (req, res, next) => {
             hourly : hourly_str,
             temp_forecast : temperature,
             precipitation_probability : precipitation_prob,
+            summary: summary
         }
 
 

@@ -107,7 +107,11 @@ const projectSchema = new Schema({
                 type: Boolean,
                 //required: true,
                 default: false
-            }
+            },
+            // attendances_time: {
+            //     type: Date,
+            //     default: null
+            // }
         }]
     }]
 }, {

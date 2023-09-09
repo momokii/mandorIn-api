@@ -23,6 +23,7 @@ const dayRoutes = require('./routes/days')
 const userRoutes = require('./routes/users')
 const roleRoutes = require('./routes/roles')
 const projectRoutes = require('./routes/projects')
+const projectDailyNotesRoutes = require('./routes/project-dailynotes')
 const workhourRoutes = require('./routes/workhours')
 
 
@@ -85,6 +86,7 @@ app.use('/users', userRoutes)
 app.use('/roles', roleRoutes)
 app.use('/workhours', workhourRoutes)
 app.use('/days', dayRoutes)
+app.use('/projects/daily-notes', projectDailyNotesRoutes)
 app.use('/projects', projectRoutes)
 // app.use('/daily-notes', dailynotesRoutes)
 
