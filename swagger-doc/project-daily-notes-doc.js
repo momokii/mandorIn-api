@@ -1,3 +1,90 @@
+// * GET /projects/daily-notes/workers
+/**
+ * @swagger
+ * /projects/daily-notes/workers:
+ *   get:
+ *     summary: Get data absensi dan catatan user workers pada sebuah project
+ *     tags: [Project-DailyNotes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         description: Ambil halaman nomor berapa
+ *       - in: query
+ *         name: size
+ *         description: Satu halaman akan ada berapa data
+ *       - in: query
+ *         name: id_project
+ *         description: ID data ingin dicari
+ *       - in: query
+ *         name: from_date
+ *         description: Cari summary dari tanggal berapa
+ *       - in: query
+ *         name: to_date
+ *         description: Cari summary sampai tanggal berapa
+ *
+ *     responses:
+ *       '200':
+ *         description:
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 errors:
+ *                   example: false
+ *                 message:
+ *                   example: Dapatkan data keuangan
+ *                 data:
+ *                     type: object
+ *                     properties:
+ *                               id:
+ *                                 type: string
+ *
+ *       '401':
+ *         description: Akun tidak punya akses
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 errors:
+ *                   example: true
+ *                 message:
+ *                   example: Akun tidak punya akses
+ *
+ *       '404':
+ *         description: Data tidak ditemukan
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 errors:
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *
+ *       '500':
+ *         description: Internal Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 errors:
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *
+ *
+ */
+
+
+
+
+
 // * GET /projects/daily-notes/finances
 /**
  * @swagger
@@ -11,6 +98,12 @@
  *       - in: query
  *         name: id_project
  *         description: ID data ingin dicari
+ *       - in: query
+ *         name: from_date
+ *         description: Cari summary dari tanggal berapa
+ *       - in: query
+ *         name: to_date
+ *         description: Cari summary sampai tanggal berapa
  *
  *     responses:
  *       '200':
@@ -98,6 +191,12 @@
  *       - in: query
  *         name: date
  *         description: Set dengan format "yyyy-MM-dd" dan cari tanggal sesuai
+ *       - in: query
+ *         name: from_date
+ *         description: Cari daily-notes dari tanggal berapa
+ *       - in: query
+ *         name: to_date
+ *         description: Cari daily-notes sampai tanggal berapa
  *
  *     responses:
  *       '200_all':
@@ -175,6 +274,79 @@
  *                 message:
  *                   type: string
  *
+ *       '500':
+ *         description: Internal Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 errors:
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *
+ *
+ */
+
+
+
+
+
+// * POST /projects/daily-notes/workers/delete
+/**
+ * @swagger
+ * /projects/daily-notes/workers/delete:
+ *   post:
+ *     summary: Hapus data daily notes user
+ *     tags: [Project-DailyNotes]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               id_project:
+ *                 type: string
+ *
+ *     responses:
+ *       '200':
+ *         description:
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 errors:
+ *                   example: false
+ *                 message:
+ *                   example: Berhasil hapus data daily-notes user
+ *
+ *       '401':
+ *         description: Akun tidak punya akses
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 errors:
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *       '404':
+ *         description: Data tidak ditemukan
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 errors:
+ *                   example: true
+ *                 message:
+ *                   type: string
  *       '500':
  *         description: Internal Server Error
  *         content:

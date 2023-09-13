@@ -1,4 +1,127 @@
-// * GET /projects/id_project
+// * GET /projects/history
+/**
+ * @swagger
+ * /projects/history:
+ *   get:
+ *     summary: Get semua data history project yang pernah dikerjakan sesuai role
+ *     tags: [Project]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         description: Ambil halaman nomor berapa
+ *       - in: query
+ *         name: size
+ *         description: Satu halaman akan ada berapa data
+ *       - in: query
+ *         name: search
+ *         description: Kata kunci untuk cari project berdasarkan nama project
+ *
+ *     responses:
+ *       '200':
+ *         description:
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 errors:
+ *                   example: false
+ *                 message:
+ *                   example: Data project
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                       total_data:
+ *                         type: number
+ *                       page:
+ *                         type: number
+ *                       per_page:
+ *                         type: number
+ *                       projects:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                               id:
+ *                                 type: string
+ *                               nama:
+ *                                 type: string
+ *                               description:
+ *                                 type: string
+ *                               target:
+ *                                 type: string
+ *                               start_project:
+ *                                 example: 2020-01-12
+ *                               end_target_project:
+ *                                 example: 20221-10-31
+ *                               day_work_start:
+ *                                 type: object
+ *                                 properties:
+ *                                   id:
+ *                                     type: number
+ *                                   name:
+ *                                     type: string
+ *                               day_work_last:
+ *                                 type: object
+ *                                 properties:
+ *                                   id:
+ *                                     type: number
+ *                                   name:
+ *                                     type: string
+ *                               workhour:
+ *                                 type: object
+ *                                 properties:
+ *                                   id:
+ *                                     type: string
+ *                                   jam_masuk:
+ *                                     example: 08:00
+ *                                   jam_selesai:
+ *                                     example: 17:00
+ *                                   jam_istirahat_mulai:
+ *                                     example: 12:00
+ *                                   jam_istirahat_selesai:
+ *                                     example: 13:00
+ *                               long:
+ *                                 type: string
+ *                               lat:
+ *                                 type: string
+ *                               pm:
+ *                                 type: object
+ *                                 properties:
+ *                                   id:
+ *                                     type: string
+ *                                   nama:
+ *                                     type: string
+ *                               on_progress:
+ *                                 type: boolean
+ *                               on_track:
+ *                                 type: boolean
+ *                               workers:
+ *                                 type: array
+ *                                 items:
+ *                                   type: string
+ *       '500':
+ *         description: Internal Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 errors:
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *
+ *
+ */
+
+
+
+
+
+// * GET /projects/:id_project
 /**
  * @swagger
  * /projects/{id_project}:
@@ -155,8 +278,8 @@
  *         name: size
  *         description: Satu halaman akan ada berapa data
  *       - in: query
- *         name: done
- *         description: Set "true" untuk hanya tampilkan data project telah selesai
+ *         name: search
+ *         description: Kata kunci untuk cari project berdasarkan nama project
  *
  *     responses:
  *       '200':
@@ -455,19 +578,13 @@
  *             type: object
  *             properties:
  *               id_project:
- *                 type: number
- *               mulai:
  *                 type: string
- *                 example: 08:00
- *               selesai:
+ *               nama:
  *                 type: string
- *                 example: 17:00
- *               istirahat_mulai:
+ *               description:
  *                 type: string
- *                 example: 12:00
- *               istirahat_selesai:
+ *               target:
  *                 type: string
- *                 example: 13:00
  *
  *     responses:
  *       '200':
@@ -530,7 +647,7 @@
  * @swagger
  * /projects:
  *   delete:
- *     summary: Delete satu data project
+ *     summary: Delete satu data project (NOT DEVELOPED)
  *     tags: [Project]
  *     security:
  *       - bearerAuth: []

@@ -61,7 +61,113 @@ function project_formatted(data) {
 
 
 
+function is_project_done(project, msg){
+    if(project.on_progress === false){
+        return res.status(statusCode['200_ok']).json({
+            errors: false,
+            message: msg
+        })
+    }
+}
+
+
 // * ------------------------------ CONTROLLER ------------------------------ * //
+
+exports.get_all_projects_history = async(req, res, next) => {
+    try{
+
+        let total_data
+        const page = parseInt(req.query.page) || 1
+        const size = parseInt(req.query.size) || 10
+        const start_data = (page - 1) * size
+
+        const search = req.query.search || ''
+
+        let project_history
+        if(req.role !== 1){
+            // * jika admin/ role = 2
+            if(req.role === 2){
+                total_data = await Project.countDocuments({
+                    name : { $regex : search.trim(), $options : "i" },
+                    id_pm: req.user_id.toString(),
+                    on_progress: false
+                })
+
+                project_history = await Project.find({
+                    name : { $regex : search.trim(), $options : "i" },
+                    id_pm: req.user_id.toString(),
+                    on_progress: false
+                })
+                    .populate({
+                        path : 'id_workhour id_pm id_day_work_start id_day_work_last'
+                    })
+                    .skip(start_data)
+                    .limit(size)
+
+            } else {
+                // * jika workers / role = 3
+                total_data = await Project.countDocuments({
+                    name : { $regex : search.trim(), $options : "i" },
+                    workers: {$in : [req.user_id.toString()]},
+                    on_progress: false
+                })
+
+                project_history = await Project.find({
+                    name : { $regex : search.trim(), $options : "i" },
+                    workers: {$in : [req.user_id.toString()]},
+                    on_progress: false
+                }).populate({
+                    path : "id_workhour id_pm id_day_work_start id_day_work_last"
+                }).skip(start_data)
+                    .limit(size)
+            }
+
+        } else {
+            // * jika superadmin / role == 1
+            total_data = await Project.countDocuments({
+                name : { $regex : search.trim(), $options : "i" },
+                on_progress: false
+            })
+
+            project_history = await Project.find({
+                name : { $regex : search.trim(), $options : "i" },
+                on_progress: false
+            })
+                .populate({
+                    path : 'id_workhour id_pm id_day_work_start id_day_work_last'
+                })
+                .skip(start_data)
+                .limit(size)
+        }
+
+        const response = project_history.map(data => {
+            const project_format = project_formatted(data)
+            project_format.workers = data.workers
+            return project_format
+        })
+
+        res.status(statusCode['200_ok']).json({
+            errors: false,
+            message: "Dapatkan data project history",
+            data: {
+                total_data: total_data,
+                page: page,
+                per_page: size,
+                projects: response
+            }
+        })
+
+    } catch (e) {
+        if(!e.statusCode){
+            e.statusCode = statusCode['500_internal_server_error']
+        }
+        next(e)
+    }
+}
+
+
+
+
 
 exports.get_one_project = async (req, res, next) => {
     try{
@@ -137,17 +243,26 @@ exports.get_all_projects = async (req, res, next) => {
         const size = parseInt(req.query.size) || 10
         const start_data = (page - 1) * size
 
+        // * misal ada search
+        const search = req.query.search || ''
+
+        // * super admin
         if (req.role !== 1){
             if(req.role === 2){
-                total_data = await Project.countDocuments({ id_pm : req.user_id })
+                total_data = await Project.countDocuments({
+                    id_pm : req.user_id,
+                    nama : { $regex : search.trim() , $options: 'i'}
+                })
                 all_project = await Project.find({
-                    id_pm : req.user_id
+                    id_pm : req.user_id,
+                    nama : { $regex : search.trim(), $options: 'i'}
                 }).populate({
                     path : "id_workhour id_pm id_day_work_start id_day_work_last"
                 })
                     .skip(start_data)
                     .limit(size)
 
+            // * user (worker)
             } else if(req.role === 3){
                 all_project = await Project.find({
                     workers: {$in : [req.user_id.toString()]}
@@ -159,8 +274,12 @@ exports.get_all_projects = async (req, res, next) => {
 
             }
         } else {
-            total_data = await Project.countDocuments()
-            all_project = await Project.find()
+            total_data = await Project.countDocuments({
+                nama : { $regex : search.trim() , $options: 'i'}
+            })
+            all_project = await Project.find({
+                nama : { $regex : search.trim() , $options: 'i'}
+            })
                 .populate({
                     path : "id_workhour id_pm id_day_work_start id_day_work_last"
                 })
@@ -227,6 +346,7 @@ exports.create_project = async (req, res, next) => {
             id_pm: id_pm
         }
 
+        // ! --------------------------- FILTER & AUTH USER --------------------------- * //
 
         // * cek jika id_day_work_start atau id_day_work_last <1 atau >8
         if((id_day_mulai < 1 || id_day_mulai > 7) || (id_day_selesai < 1 || id_day_selesai > 7)){
@@ -259,6 +379,8 @@ exports.create_project = async (req, res, next) => {
         if(check_project){
             throw_err("Project dengan data sama persis sudah ada, coba cek data input kembali", statusCode['400_bad_request'])
         }
+
+        // ! --------------------------- ----------------- --------------------------- * //
 
         // * buat dahulu namun belum disimpan
         const new_project = new Project({
@@ -376,9 +498,34 @@ exports.edit_project = async (req, res, next) => {
     try{
         const id_project = req.body.id_project
         const nama = req.body.nama
-        const dscription = req.body.description
+        const description = req.body.description
         const target = req.body.target
 
+        // ! --------------------------- FILTER & AUTH USER --------------------------- * //
+
+        const project = await Project.findById(id_project)
+        if(!project){
+            throw_err("Data tidak ditemukan", statusCode['404_not_found'])
+        }
+
+
+        is_project_done(project, "Project sudah selesai, tidak bisa jalankan proses")
+
+        // ! --------------------------- ----------------- --------------------------- * //
+
+        if(nama !== '' && nama !== null){
+            project.nama = nama
+        }
+
+        if(description !== '' && description !== null){
+            project.description = description
+        }
+
+        if(target !== '' && target !== null){
+            project.target = target
+        }
+
+        await project.save()
 
         res.status(statusCode['200_ok']).json({
             errors: false,

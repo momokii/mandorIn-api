@@ -7,6 +7,8 @@ const is_user = require('../middleware/role-checking').is_user
 
 // * ------------------------------ ROUTING ------------------------------ * //
 
+router.get('/history', is_auth, projectController.get_all_projects_history)
+
 router.get('/:id_project', is_auth, //is_superadmin,
     projectController.get_one_project)
 

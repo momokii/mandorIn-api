@@ -10,6 +10,8 @@ const is_user = require('../middleware/role-checking').is_user
 
 // ! ------- GET -------
 
+router.get('/workers', is_auth, is_user, projectDailyNotesController.get_workers_daily_notes_summary)
+
 router.get('/finances', is_auth, projectDailyNotesController.get_daily_notes_finance_summary)
 
 router.get('/', is_auth, projectDailyNotesController.get_daily_notes)
@@ -17,7 +19,9 @@ router.get('/', is_auth, projectDailyNotesController.get_daily_notes)
 
 // ! ------- POST -------
 
-router.post('/workers', is_auth,
+router.post('/workers/delete', is_auth, is_user, projectDailyNotesController.workers_delete_post_notes)
+
+router.post('/workers', is_auth, is_user,
     // * nantinya hanya user worker saja yang bisa akses
     projectDailyNotesController.workers_post_notes)
 

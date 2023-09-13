@@ -6,11 +6,13 @@ const cors = require('cors')
 const helmet = require('helmet')
 const swaggerUI = require('swagger-ui-express')
 const swaggerJSDoc = require('swagger-jsdoc')
-//const sequelize = require('./utils/db')
 const mongoose = require('mongoose') // * gunakan mmongoose
+const morgan = require('morgan')
+//const sequelize = require('./utils/db')
 
 // * CONST
 const PORT = process.env.PORT
+
 
 // * IMPORT DB SCHEMA
 //require('./utils/db-schema')
@@ -19,7 +21,6 @@ const PORT = process.env.PORT
 // * ROUTES
 const authRoutes = require('./routes/auths')
 const dayRoutes = require('./routes/days')
-// const dailynotesRoutes = require('./routes/daily-notes')
 const userRoutes = require('./routes/users')
 const roleRoutes = require('./routes/roles')
 const projectRoutes = require('./routes/projects')
@@ -76,6 +77,10 @@ app.use(helmet({
     noCache: true, // enable noCache header
     referrerPolicy: { policy: 'no-referrer' } // set referrer policy to no-referrer
 }))
+
+// ? set morgan console logging
+const customFormat = ':date[iso] | :status | :response-time ms | :remote-addr | :method :url';
+app.use(morgan(customFormat));
 
 
 // * ------ ROUTES SET
