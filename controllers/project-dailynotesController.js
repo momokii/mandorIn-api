@@ -4,7 +4,7 @@ const BaseDailyNotes = require('../models/daily-notes-struct')
 
 // * gunakan mongoose
 const Project = require('../models/project')
-const Workhour = require('../models/workhour')
+const Workhour = require('../models/workhour') 
 const Day = require('../models/day')
 const User = require('../models/user')
 const Weather = require('../models/weather')
@@ -1015,6 +1015,17 @@ exports.post_dailynotes = async (req, res, next) => {
 }
 
 
+exports.test = async (req, res, next) => {
+    try{
 
+        const test = await Project.findById()
+
+    } catch (e){
+        if(!e.statusCode) {
+            e.statusCode = statusCode['500_internal_server_error']
+        }
+        next(e)
+    }
+}
 
 
