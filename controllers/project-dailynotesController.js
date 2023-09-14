@@ -28,12 +28,20 @@ function is_superadmin_or_admin_pm(req, pm_id) {
 
 
 // * fungsi untuk filtering -> ketika daily confirmation = true -> maka data pada hari tersebut sudah tidak bisa di edit lagi
-function is_daily_confirmation_true(daily_note){
-    if(daily_note.daily_confirmation){
-        return res.status(statusCode['200_ok']).json({
-            errors: false,
-            message: "Data harian sudah dikunci, edit tidak bisa dilakukan"
-        })
+function is_daily_confirmation_true(project){
+    let daily_notes = project.daily_notes
+
+    let today_date = today_date_str()
+
+    for(note of daily_notes){
+        if( note.date.toString() === today_date.toString() ){
+            if(note.daily_confirmation === true){
+                return res.status(statusCode['200_ok']).json({
+                    errors: false,
+                    message: "Data harian sudah dikunci, edit tidak bisa dilakukan"
+                })
+            }
+        }
     }
 }
 
@@ -472,7 +480,7 @@ exports.workers_delete_post_notes = async (req, res, next) => {
         is_project_done(project, "Project sudah selesai, tidak bisa jalankan proses")
 
         // * jika konfirmasi harian sudah true tidak bisa post
-        is_daily_confirmation_true()
+        is_daily_confirmation_true(project)
 
         let user_id_project = workers.id_project
         if(user_id_project === null){
@@ -534,7 +542,7 @@ exports.workers_post_notes = async (req, res, next) => {
         is_project_done(project, "Project sudah selesai, tidak bisa jalankan proses")
 
         // * jika konfirmasi harian sudah true tidak bisa post
-        is_daily_confirmation_true()
+        is_daily_confirmation_true(project)
 
         // * cek user terlibat dalam project terkait atau tidak
         let project_id = workers.id_project
@@ -556,9 +564,6 @@ exports.workers_post_notes = async (req, res, next) => {
                 if(data_notes.daily_confirmation === true){
                     throw_err("Catatan harian sudah ditutup", statusCode['401_unauthorized'])
                 }
-
-                // ! ---------- filter tambahan--> cek daily confirmation sudah TRUE belum --------
-                is_daily_confirmation_true(data_notes)
 
                 // * cari apakah sudah buat notes atau belum, jika belum maka buat dan jika sudah maka hanya update notes terkait
                 let is_create = false
@@ -625,7 +630,7 @@ exports.post_notes_tomorrow = async (req, res, next) => {
         is_project_done(project, "Project sudah selesai, tidak bisa jalankan proses")
 
         // * jika konfirmasi harian sudah true tidak bisa post
-        is_daily_confirmation_true()
+        is_daily_confirmation_true(project)
         // ! --------------------------- ----------------- --------------------------- * //
 
         const date = new Date()
@@ -672,7 +677,7 @@ exports.daily_attendances_confirmation = async (req, res, next) => {
         is_project_done(project, "Project sudah selesai, tidak bisa jalankan proses")
 
         // * jika konfirmasi harian sudah true tidak bisa post
-        is_daily_confirmation_true()
+        is_daily_confirmation_true(project)
         // ! --------------------------- ----------------- --------------------------- * //
 
         const date_formatted = today_date_str()
@@ -740,7 +745,7 @@ exports.post_attendance_workers = async (req, res, next) => {
         is_project_done(project, "Project sudah selesai, tidak bisa jalankan proses")
 
         // * jika konfirmasi harian sudah true tidak bisa post
-        is_daily_confirmation_true()
+        is_daily_confirmation_true(project)
 
         // * jika sudah tutup absensi harian
         is_attendances_confirmation_true()
@@ -877,8 +882,8 @@ exports.post_incomes_expenses = exports.template = async (req, res, next) => {
         // * kalau project sudah DONE maka tidak bisa post
         is_project_done(project, "Project sudah selesai, tidak bisa post finance data")
 
-        // * jika konfirmasi harian sudah true tidak bisa post
-        is_daily_confirmation_true()
+        // ! filter tambahan--> cek daily confirmation sudah TRUE belum
+        is_daily_confirmation_true(project)
         // ! --------------------------- ----------------- --------------------------- * //
 
         const today_date = new Date()
@@ -887,9 +892,6 @@ exports.post_incomes_expenses = exports.template = async (req, res, next) => {
         // * get day now -> dengan iterasi ke semua daily notes terkait
         project.daily_notes.forEach(data => {
             if(data.date.toString() == formatted_date.toString()){
-
-                // ! filter tambahan--> cek daily confirmation sudah TRUE belum
-                is_daily_confirmation_true(data)
 
                 if(ket === 'expenses'){
                     data.expenses.data = data_post // string keterangan total harian
@@ -937,7 +939,7 @@ exports.post_dailynotes = async (req, res, next) => {
         is_project_done(project, "Project sudah selesai, tidak bisa buat daily notes baru")
 
         // * jika konfirmasi harian sudah true tidak bisa post
-        is_daily_confirmation_true()
+        is_daily_confirmation_true(project)
 
         const this_day_date = new Date()
         const formatted_date = format_date(this_day_date, "yyyy-MM-dd").toString()
@@ -966,33 +968,33 @@ exports.post_dailynotes = async (req, res, next) => {
 
         // ? ---------------------- update Daily Weather Prediction ----------------------
 
-        // const weather = await Weather.findOne({
-        //     id_project : project._id.toString()
-        // })
-        //
-        // const LONG = project.long
-        // const LAT = project.lat
-        // const api_url = "https://api.open-meteo.com/v1/forecast?latitude=" + LONG.toString() +  "&longitude=" + LAT.toString() + "&hourly=temperature_2m,precipitation_probability&timezone=Asia%2FBangkok&forecast_days=1"
-        // const response = await axios.get(api_url)
-        // const response_data = response.data // response asli
-        //
-        // // * format untuk dapatkan date dari response api
-        // let date_forecast = response_data.hourly.time[0]
-        // const indexT = date_forecast.indexOf("T")
-        //
-        // // * tidak perlu format, tetap berikan number (untuk prep dan temperature) dan diformat di FE saja
-        // const hourly_str = response_data.hourly.time.map(data => {
-        //     const index_T = data.indexOf("T")
-        //     return data.substring(index_T + 1)
-        // })
-        //
-        // // * format response get data ke model weather
-        // weather.timezone = response_data.timezone // * sesuaikan sendiri
-        // weather.elevation = response_data.elevation // * berapa mdpl long lat terkait
-        // weather.temp_forecast = response_data.hourly.temperature_2m // * data asli 1 hari
-        // weather.precipitation_probability = response_data.hourly.precipitation_probability
-        // weather.hourly = hourly_str
-        // weather.date = date_forecast.substring(0, indexT)
+        const weather = await Weather.findOne({
+            id_project : project._id.toString()
+        })
+
+        const LONG = project.long
+        const LAT = project.lat
+        const api_url = "https://api.open-meteo.com/v1/forecast?latitude=" + LONG.toString() +  "&longitude=" + LAT.toString() + "&hourly=temperature_2m,precipitation_probability&timezone=Asia%2FBangkok&forecast_days=1"
+        const response = await axios.get(api_url)
+        const response_data = response.data // response asli
+
+        // * format untuk dapatkan date dari response api
+        let date_forecast = response_data.hourly.time[0]
+        const indexT = date_forecast.indexOf("T")
+
+        // * tidak perlu format, tetap berikan number (untuk prep dan temperature) dan diformat di FE saja
+        const hourly_str = response_data.hourly.time.map(data => {
+            const index_T = data.indexOf("T")
+            return data.substring(index_T + 1)
+        })
+
+        // * format response get data ke model weather
+        weather.timezone = response_data.timezone // * sesuaikan sendiri
+        weather.elevation = response_data.elevation // * berapa mdpl long lat terkait
+        weather.temp_forecast = response_data.hourly.temperature_2m // * data asli 1 hari
+        weather.precipitation_probability = response_data.hourly.precipitation_probability
+        weather.hourly = hourly_str
+        weather.date = date_forecast.substring(0, indexT)
 
         // ? ------------------------------------------------------------------------------
 
