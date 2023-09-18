@@ -372,7 +372,7 @@ exports.get_daily_notes = async (req, res, next) => {
             } else {
                 today_notes_from_yesterday = project.daily_notes[yesterday_index].note_tomorrow
             }
-            console.log(today_notes_from_yesterday)
+
             response.data.today_note_from_yesterday = today_notes_from_yesterday
 
             // * untuk sekarang -> baru inputkan data weather terbaur ketika get ONE data projct
@@ -386,7 +386,7 @@ exports.get_daily_notes = async (req, res, next) => {
             }
 
             weather.summary = summary
-            response.weather_prediction = weather
+            response.data.weather_prediction = weather
 
         // * get data pada hari tertentu saja
         } else if(req.query.date){
@@ -717,7 +717,7 @@ exports.daily_attendances_confirmation = async (req, res, next) => {
 
 
 
-
+// FIXME belum disesuaikan untuk response di harapkan
 exports.post_attendance_workers = async (req, res, next) => {
     try{
         const id_project = req.body.id_project
@@ -747,8 +747,6 @@ exports.post_attendance_workers = async (req, res, next) => {
         // * jika konfirmasi harian sudah true tidak bisa post
         is_daily_confirmation_true(project)
 
-        // * jika sudah tutup absensi harian
-        is_attendances_confirmation_true()
         // ! --------------------------- ----------------- --------------------------- * //
 
         const formatted_date = today_date_str()
@@ -1000,7 +998,7 @@ exports.post_dailynotes = async (req, res, next) => {
 
         // * tambah data daily notes baru ke project
         project.daily_notes.push(new_daily_notes)
-        //await weather.save()
+        await weather.save()
         await project.save()
 
         res.status(statusCode['200_ok']).json({

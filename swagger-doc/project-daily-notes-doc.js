@@ -39,8 +39,42 @@
  *                 data:
  *                     type: object
  *                     properties:
- *                               id:
- *                                 type: string
+ *                               project_summary:
+ *                                 type: object
+ *                                 properties:
+ *                                   nama:
+ *                                     type: string
+ *                                   description:
+ *                                     type: string
+ *                                   pm:
+ *                                     type: object
+ *                                     properties:
+ *                                       id_pm:
+ *                                         type: string
+ *                                       nama:
+ *                                         type: string   
+ *                               user_daily_notes:
+ *                                 type: object
+ *                                 properties:
+ *                                   total_data:
+ *                                     type: number
+ *                                   page:
+ *                                     type: number
+ *                                   per_page:
+ *                                     type: number
+ *                                   data:
+ *                                     type: array
+ *                                     items:
+ *                                       type: object
+ *                                       properties:
+ *                                         date:
+ *                                           type: string
+ *                                         id_user:
+ *                                           type: string
+ *                                         attendances: 
+ *                                           type: boolean
+ *                                         worker_note:
+ *                                           type: string     
  *
  *       '401':
  *         description: Akun tidak punya akses
@@ -118,10 +152,50 @@
  *                 message:
  *                   example: Dapatkan data keuangan
  *                 data:
- *                     type: object
- *                     properties:
- *                               id:
+ *                     type: array
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                               start_date:
  *                                 type: string
+ *                               end_date:
+ *                                 type: string
+ *                               daily_data:
+ *                                 type: object
+ *                                 properties:
+ *                                   date:
+ *                                     type: string
+ *                                   incomes:
+ *                                     type: object
+ *                                     properties:
+ *                                       data:
+ *                                         type: string
+ *                                       total:
+ *                                         type: number
+ *                                   expenses:
+ *                                     type: object
+ *                                     properties:
+ *                                       data:
+ *                                         type: string
+ *                                       total:
+ *                                         type: number    
+ *                               total_incomes:
+ *                                 type: number      
+ *                               total_expenses:
+ *                                 type: number      
+ *                               total:
+ *                                 type: number      
+ *       '400':
+ *         description: Bad Request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 errors:
+ *                   example: true
+ *                 message:
+ *                   type: string  
  *
  *       '401':
  *         description: Akun tidak punya akses
@@ -165,7 +239,7 @@
 
 
 
-
+// FIXME mungkin tambahan properti ketika sudah jadi file controllernya 
 // * GET /projects/daily-notes
 /**
  * @swagger
@@ -199,7 +273,7 @@
  *         description: Cari daily-notes sampai tanggal berapa
  *
  *     responses:
- *       '200_all':
+ *       '200_all_or_with_from_to_date':
  *         description:
  *         content:
  *           application/json:
@@ -213,9 +287,63 @@
  *                 data:
  *                     type: object
  *                     properties:
- *                               id:
- *                                 type: string
- *
+ *                                   total_data:
+ *                                     type: number
+ *                                   page:
+ *                                     type: number
+ *                                   per_page:
+ *                                     type: number
+ *                                   daily_notes:
+ *                                     type: array
+ *                                     items:
+ *                                       type: object
+ *                                       properties:
+ *                                         _id:
+ *                                           type: string
+ *                                         daily_attendances:
+ *                                           type: boolean
+ *                                         daily_confirmation:
+ *                                           type: boolean
+ *                                         date:
+ *                                           type: string  
+ *                                         note_tomorrow:
+ *                                           type: string
+ *                                         incomes:
+ *                                           type: object
+ *                                           properties:
+ *                                             data:
+ *                                               type: string
+ *                                             total:
+ *                                               type: number
+ *                                         expenses:
+ *                                           type: object
+ *                                           properties:
+ *                                             data:
+ *                                               type: string
+ *                                             total:
+ *                                               type: number  
+ *                                         workers_notes:
+ *                                           type: array
+ *                                           items:
+ *                                             type: object 
+ *                                             properties:
+ *                                               id_user:
+ *                                                 type: string
+ *                                               data:
+ *                                                 type: string
+ *                                               _id:
+ *                                                 type: string 
+ *                                         attendances:
+ *                                           type: array
+ *                                           items:
+ *                                             type: object 
+ *                                             properties:
+ *                                               id_user:
+ *                                                 type: string
+ *                                               attendances:
+ *                                                 type: boolean
+ *                                               _id:
+ *                                                 type: string   
  *       '200_today':
  *         description:
  *         content:
@@ -230,10 +358,86 @@
  *                 data:
  *                     type: object
  *                     properties:
- *                               id:
- *                                 type: string
+ *                                   _id:
+ *                                     type: string
+ *                                   daily_attendances:
+ *                                     type: boolean
+ *                                   daily_confirmation:
+ *                                     type: boolean
+ *                                   date:
+ *                                     type: string  
+ *                                   note_tomorrow:
+ *                                     type: string
+ *                                   incomes:
+ *                                     type: object
+ *                                     properties:
+ *                                       data:
+ *                                         type: string
+ *                                       total:
+ *                                         type: number
+ *                                   expenses:
+ *                                     type: object
+ *                                     properties:
+ *                                       data:
+ *                                         type: string
+ *                                       total:
+ *                                         type: number  
+ *                                   workers_notes:
+ *                                     type: array
+ *                                     items:
+ *                                       type: object 
+ *                                       properties:
+ *                                         id_user:
+ *                                           type: string
+ *                                         data:
+ *                                           type: string
+ *                                         _id:
+ *                                           type: string 
+ *                                   attendances:
+ *                                     type: array
+ *                                     items:
+ *                                       type: object 
+ *                                       properties:
+ *                                         id_user:
+ *                                           type: string
+ *                                         attendances:
+ *                                           type: boolean
+ *                                         _id:
+ *                                           type: string   
+ *                                   today_note_from_yesterday:
+ *                                      type: string
+ *                                   weather_prediction:
+ *                                      type: object 
+ *                                      properties:
+ *                                        _id:
+ *                                          type: string
+ *                                        id_project:
+ *                                          type: string
+ *                                        timezone:
+ *                                          type: string
+ *                                        elevation:
+ *                                          type: number
+ *                                        unit:
+ *                                          type: object
+ *                                          properties:
+ *                                            temperature:
+ *                                              type: string
+ *                                            precipitation:
+ *                                              type: string
+ *                                        date:
+ *                                          type: string
+ *                                        hourly:
+ *                                          type: array
+ *                                          items:
+ *                                            type: string
+ *                                        temp_forecast:
+ *                                          type: number
+ *                                        precipitation_probability:
+ *                                          type: number
+ *                                             
+ *                                        
  *
- *       '200_selected_date':
+ *       '200_selected_one_date':
  *         description:
  *         content:
  *           application/json:
@@ -247,8 +451,64 @@
  *                 data:
  *                     type: object
  *                     properties:
- *                               id:
- *                                 type: string
+ *                                   _id:
+ *                                     type: string
+ *                                   daily_attendances:
+ *                                     type: boolean
+ *                                   daily_confirmation:
+ *                                     type: boolean
+ *                                   date:
+ *                                     type: string  
+ *                                   note_tomorrow:
+ *                                     type: string
+ *                                   incomes:
+ *                                     type: object
+ *                                     properties:
+ *                                       data:
+ *                                         type: string
+ *                                       total:
+ *                                         type: number
+ *                                   expenses:
+ *                                     type: object
+ *                                     properties:
+ *                                       data:
+ *                                         type: string
+ *                                       total:
+ *                                         type: number  
+ *                                   workers_notes:
+ *                                     type: array
+ *                                     items:
+ *                                       type: object 
+ *                                       properties:
+ *                                         id_user:
+ *                                           type: string
+ *                                         data:
+ *                                           type: string
+ *                                         _id:
+ *                                           type: string 
+ *                                   attendances:
+ *                                     type: array
+ *                                     items:
+ *                                       type: object 
+ *                                       properties:
+ *                                         id_user:
+ *                                           type: string
+ *                                         attendances:
+ *                                           type: boolean
+ *                                         _id:
+ *                                           type: string    
+ * 
+ *       '400':
+ *         description: Bad Request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 errors:
+ *                   example: true
+ *                 message:
+ *                   type: string       
  *
  *       '401':
  *         description: Akun tidak punya akses
@@ -371,7 +631,7 @@
  * @swagger
  * /projects/daily-notes/workers:
  *   post:
- *     summary: Po
+ *     summary: Post catatan harian oleh workers
  *     tags: [Project-DailyNotes]
  *     security:
  *       - bearerAuth: []
@@ -399,18 +659,6 @@
  *                   example: false
  *                 message:
  *                   example: Berhasil update workers note
- *
- *       '400':
- *         description: Proses input data baru gagal
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 errors:
- *                   example: true
- *                 message:
- *                   type: string
  *
  *       '401':
  *         description: Akun tidak punya akses
@@ -485,18 +733,6 @@
  *                 message:
  *                   example: Berhasil Update Konfirmasi absen harian
  *
- *       '400':
- *         description: Proses input data baru gagal
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 errors:
- *                   example: true
- *                 message:
- *                   type: string
- *
  *       '401':
  *         description: Akun tidak punya akses
  *         content:
@@ -569,18 +805,6 @@
  *                   example: false
  *                 message:
  *                   example: User {username} berhasil absen untuk hari {tanggal} - {waktu}
- *
- *       '400':
- *         description: Proses input data baru gagal
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 errors:
- *                   example: true
- *                 message:
- *                   type: string
  *
  *       '401':
  *         description: Akun tidak punya akses
@@ -657,18 +881,6 @@
  *                 message:
  *                   example: Berhasil ubah data note untuk hari besok
  *
- *       '400':
- *         description: Proses input data baru gagal
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 errors:
- *                   example: true
- *                 message:
- *                   type: string
- *
  *       '401':
  *         description: Akun tidak punya akses
  *         content:
@@ -741,105 +953,6 @@
  *                   example: false
  *                 message:
  *                   example: Berhasil ubah status daily notes
- *
- *       '400':
- *         description: Proses input data baru gagal
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 errors:
- *                   example: true
- *                 message:
- *                   type: string
- *
- *       '401':
- *         description: Akun tidak punya akses
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 errors:
- *                   example: true
- *                 message:
- *                   type: string
- *       '404':
- *         description: Data tidak ditemukan
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 errors:
- *                   example: true
- *                 message:
- *                   type: string
- *       '500':
- *         description: Internal Server Error
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 errors:
- *                   example: true
- *                 message:
- *                   type: string
- *
- *
- */
-
-
-
-
-
-// * POST /projects/daily-notes/workers
-/**
- * @swagger
- * /projects/daily-notes/workers:
- *   post:
- *     summary: Post incomes/ expenses pada daily notes
- *     tags: [Project-DailyNotes]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               id_project:
- *                 type: string
- *               data:
- *                 type: string
- *
- *     responses:
- *       '200':
- *         description:
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 errors:
- *                   example: false
- *                 message:
- *                   example: Berhasil update workers note
- *
- *       '400':
- *         description: Proses input data baru gagal
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 errors:
- *                   example: true
- *                 message:
- *                   type: string
  *
  *       '401':
  *         description: Akun tidak punya akses
@@ -921,18 +1034,6 @@
  *                   example: false
  *                 message:
  *                   example: Berhasil tambah data baru
- *
- *       '400':
- *         description: Proses input data baru gagal
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 errors:
- *                   example: true
- *                 message:
- *                   type: string
  *
  *       '401':
  *         description: Akun tidak punya akses
