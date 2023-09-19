@@ -8,7 +8,8 @@ const Workhour = require('../models/workhour')
 const Day = require('../models/day')
 const User = require('../models/user')
 const Weather = require('../models/weather')
-const axios = require("axios");
+const axios = require("axios")
+const file_controller = require('../controllers/fileCloudController')
 
 
 // * ------------------------------ FUNCTION ------------------------------ * //
@@ -33,7 +34,7 @@ function is_daily_confirmation_true(project){
 
     let today_date = today_date_str()
 
-    for(note of daily_notes){
+    for(let note of daily_notes){
         if( note.date.toString() === today_date.toString() ){
             if(note.daily_confirmation === true){
                 return res.status(statusCode['200_ok']).json({
@@ -171,7 +172,7 @@ exports.get_workers_daily_notes_summary = async (req, res, next) => {
             const worker_notes = note.workers_notes
             let worker_note = null
             if(worker_notes.length > 0){ // * jika kosong maka tidak usah dicek
-                for(note_worker of worker_notes){
+                for(let note_worker of worker_notes){
                     if(note_worker.id_user.toString() === user._id.toString()){
                         worker_note = note_worker.data
                         break
@@ -179,7 +180,7 @@ exports.get_workers_daily_notes_summary = async (req, res, next) => {
                 }
             }
 
-            for(attendance of note.attendances){
+            for(let attendance of note.attendances){
                 if(attendance.id_user.toString() === user._id.toString()){
                     const user_attendance_data = {
                         date: date,
@@ -279,16 +280,18 @@ exports.get_daily_notes_finance_summary = async (req, res, next) => {
         }
         // * --------------------------
 
-        for (note of daily_notes){
+        for (let note of daily_notes){
             const daily_data = {
                 date : note.date,
                 incomes : {
                     data: note.incomes.data,
-                    total: note.incomes.total
+                    total: note.incomes.total,
+                    file: note.incomes.file
                 },
                 expenses : {
                     data: note.expenses.data,
-                    total: note.expenses.total
+                    total: note.expenses.total,
+                    file: note.expenses.file
                 }
             }
             all_incomes_expenses.push(daily_data)
@@ -355,7 +358,7 @@ exports.get_daily_notes = async (req, res, next) => {
         if(req.query.today === 'true') {
             const today_str = today_date_str()
             let daily_note
-            for (data of project.daily_notes) {
+            for (let data of project.daily_notes) {
                 if (today_str.toString() === data.date) {
                     daily_note = data
                     break
@@ -380,7 +383,7 @@ exports.get_daily_notes = async (req, res, next) => {
                 id_project: project._id.toString()
             }).lean()
             let summary = []
-            for (i = 0; i < weather.hourly.length; i++) {
+            for (let i = 0; i < weather.hourly.length; i++) {
                 const data = [weather.hourly[i], weather.temp_forecast[i], weather.precipitation_probability[i]]
                 summary.push(data)
             }
@@ -393,7 +396,7 @@ exports.get_daily_notes = async (req, res, next) => {
 
             let daily_note
             const date_search = req.query.date //* akan diharapkan sudah format "2023-09-10"
-            for(note of project.daily_notes){
+            for(let note of project.daily_notes){
                 if(date_search === note.date){
                     daily_note = note
                     break
@@ -493,7 +496,7 @@ exports.workers_delete_post_notes = async (req, res, next) => {
 
         const today_date = today_date_str()
         const daily_notes = project.daily_notes
-        for (note of daily_notes){
+        for (let note of daily_notes){
             if(note.date.toString() === today_date.toString()){
                 // * hapus data dari array workers note
                 note.workers_notes = note.workers_notes.filter(data => {
@@ -558,7 +561,7 @@ exports.workers_post_notes = async (req, res, next) => {
         const today_date = new Date()
         const formatted_date = format_date(today_date, "yyyy-MM-dd")
 
-        for (data_notes of project.daily_notes){
+        for (let data_notes of project.daily_notes){
             if(data_notes.date.toString() === formatted_date.toString()){
                 // * tidak bisa edit/ tambah ketika daily confirmation sudah true
                 if(data_notes.daily_confirmation === true){
@@ -567,7 +570,7 @@ exports.workers_post_notes = async (req, res, next) => {
 
                 // * cari apakah sudah buat notes atau belum, jika belum maka buat dan jika sudah maka hanya update notes terkait
                 let is_create = false
-                for(note of data_notes.workers_notes){
+                for(let note of data_notes.workers_notes){
                     if(note.id_user.toString() === req.user_id){
                         // * karena ada -> maka update saja
                         note.data = data
@@ -636,7 +639,7 @@ exports.post_notes_tomorrow = async (req, res, next) => {
         const date = new Date()
         const formatted_date = format_date(date, "yyyy-MM-dd")
 
-        for(note of project.daily_notes){
+        for(let note of project.daily_notes){
             if(note.date.toString() === formatted_date.toString()){
                 note.note_tomorrow = data_note
                 break
@@ -682,7 +685,7 @@ exports.daily_attendances_confirmation = async (req, res, next) => {
 
         const date_formatted = today_date_str()
 
-        for(note of project.daily_notes){
+        for(let note of project.daily_notes){
             if(note.date.toString() === date_formatted.toString()){
                 if(req.role === 2){
                     if(note.daily_attendances === true){
@@ -751,12 +754,12 @@ exports.post_attendance_workers = async (req, res, next) => {
 
         const formatted_date = today_date_str()
         let is_attended
-        for(note of project.daily_notes){
+        for(let note of project.daily_notes){
             if(formatted_date.toString() === note.date.toString()){
                 // ! checking daily confirmation attendances
                 is_attendances_confirmation_true(note)
 
-                for(worker of note.attendances){
+                for(let worker of note.attendances){
                     if(worker.id_user.toString() === user._id.toString()){
                         if(worker.attendances === true){
                             is_attended = true
@@ -806,11 +809,6 @@ exports.daily_confirmation_done = exports.template = async (req, res, next) => {
          */
 
         // ! --------------------------- FILTER & AUTH USER --------------------------- * //
-        // * jika request bukan admin dan juga bukan superadmin
-        if(req.role === 3 ){
-            throw_err("Akun tidak punya akses", statusCode['404_not_found'])
-        }
-
         const project = await Project.findById(req.body.id_project)
         if(!project){
             throw_err("Data tidak ditemukan", statusCode['404_not_found'])
@@ -827,7 +825,7 @@ exports.daily_confirmation_done = exports.template = async (req, res, next) => {
         const today_date = new Date()
         const formatted_date = format_date(today_date, "yyyy-MM-dd")
 
-        for (note of project.daily_notes){
+        for (let note of project.daily_notes){
             if(note.date.toString() === formatted_date.toString()){
                 // * lakukan pengecekan sesuai role yang diharapkan
                 if(req.role === 1){
@@ -861,7 +859,81 @@ exports.daily_confirmation_done = exports.template = async (req, res, next) => {
 
 
 
-exports.post_incomes_expenses = exports.template = async (req, res, next) => {
+
+exports.delete_incomes_expenses = async (req, res, next) => {
+    try{
+        /*
+        * untuk sekarang hanya bisa digunakan pada hari terkait dan sbelum konfirmasi hari
+        */
+
+        // ! --------------------------- FILTER & AUTH USER --------------------------- * //
+        const project = await Project.findById(req.body.id_project)
+        if(!project){
+            throw_err("Data tidak ditemukan", statusCode['404_not_found'])
+        }
+
+        is_superadmin_or_admin_pm(req, project.id_pm)
+
+        is_daily_confirmation_true(project)
+
+        is_project_done(project, "Project sudah selesai, tidak bisa jalankan proses")
+
+        // ! --------------------------- ----------------- --------------------------- * //
+        const ket = req.params.finance 
+
+        const today_date = today_date_str()
+        for(let note of project.daily_notes){
+            if(note.date.toString() === today_date){
+                if(ket === 'incomes'){
+                    if(!req.body.file_only){
+                        note.incomes.data = null 
+                        note.incomes.total = 0
+                    }
+                    req.file_url = note.incomes.file
+                    note.incomes.file = null
+                } 
+
+                if(ket === 'expenses'){
+                    if(!req.body.file_only){
+                        note.expenses.data = null 
+                        note.expenses.total = 0
+                    }
+                    req.file_url = note.expenses.file
+                    note.expenses.file = null
+                }
+                break
+            }
+        }
+
+        // * del file
+        if(req.file_url){
+            req.type = 'daily_notes'
+            const delete_file = await file_controller.delete_file(req)
+            if(!delete_file){
+                throw_err("Proses hapus file dalam cloud storage gagal", statusCode['500_internal_server_error'])
+            }
+        }
+        
+        await project.save()
+
+        res.status(statusCode['200_ok']).json({
+            errors: false,
+            message: "Berhasil hapus data daily notes"
+        })
+
+    } catch(e){
+        if(!e.statusCode){
+            e.statusCode = statusCode['500_internal_server_error']
+        }
+        next(e)
+    }
+}
+
+
+
+
+
+exports.post_incomes_expenses = async (req, res, next) => {
     try{
         const ket = req.params.finance
         const total = req.body.total
@@ -884,28 +956,51 @@ exports.post_incomes_expenses = exports.template = async (req, res, next) => {
         is_daily_confirmation_true(project)
         // ! --------------------------- ----------------- --------------------------- * //
 
-        const today_date = new Date()
-        const formatted_date = format_date(today_date, "yyyy-MM-dd")
+        const formatted_date = today_date_str()
 
-        // * get day now -> dengan iterasi ke semua daily notes terkait
-        project.daily_notes.forEach(data => {
+        // * get_day today
+        for (let data of project.daily_notes){
             if(data.date.toString() == formatted_date.toString()){
+
+                req.type = 'daily-notes'
+                req.daily_notes_date = formatted_date  
+                req.daily_notes_type = ket 
 
                 if(ket === 'expenses'){
                     data.expenses.data = data_post // string keterangan total harian
                     data.expenses.total = total // number total pengeluarn
+                    req.file_now = data.expenses.file 
+                    if(req.file){
+                        const response = await file_controller.upload_file(req)
+                        if(response.errors === true){
+                            throw_err(response.message, response.statusCode)
+                        }
+                        data.expenses.file = response.publicUrl
+                    }
+                    
+
                 } else if(ket === 'incomes'){
-                    data.incomes.data = data_post
+                    data.incomes.data = data_post 
                     data.incomes.total = total
+                    req.file_now = data.incomes.file  
+                    if(req.file){
+                        const response = await file_controller.upload_file(req)
+                        if(response.errors === true){
+                            throw_err(response.message, response.statusCodee)
+                        }
+                        data.incomes.file = response.publicUrl
+                    }
                 }
+
+                break
             }
-        })
+        }
 
         await project.save()
 
         res.status(statusCode['200_ok']).json({
             errors: false,
-            message: "Berhasil update keunagan daily notes"
+            message: "Berhasil update keuangan daily notes"
         })
 
     } catch (e) {
@@ -1008,20 +1103,6 @@ exports.post_dailynotes = async (req, res, next) => {
 
     } catch (e) {
         if(!e.statusCode){
-            e.statusCode = statusCode['500_internal_server_error']
-        }
-        next(e)
-    }
-}
-
-
-exports.test = async (req, res, next) => {
-    try{
-
-        const test = await Project.findById()
-
-    } catch (e){
-        if(!e.statusCode) {
             e.statusCode = statusCode['500_internal_server_error']
         }
         next(e)

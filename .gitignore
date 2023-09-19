@@ -9,3 +9,5 @@ mandorin.sqlite
 notes.txt
 utils/db.js
 utils/db-schema.js
+mandorin-sa.json
+.eslintrc.json 

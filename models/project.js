@@ -1,7 +1,6 @@
 const mongoose = require('mongoose')
 const Schema = mongoose.Schema
 
-
 const projectSchema = new Schema({
     nama : {
         type: String,
@@ -84,11 +83,13 @@ const projectSchema = new Schema({
         note_tomorrow: String,
         incomes: {
             data: String,
-            total: {type: Number, default: 0}
+            total: {type: Number, default: 0},
+            file: {type: String, default: null}
         },
         expenses: {
             data: String,
-            total: {type: Number, default: 0}
+            total: {type: Number, default: 0},
+            file: {type: String, default: null}
         },
         workers_notes: [{
             id_user : {

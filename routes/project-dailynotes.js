@@ -2,8 +2,10 @@ const router = require('express').Router()
 const projectDailyNotesController = require('../controllers/project-dailynotesController')
 
 const is_auth = require('../middleware/is-auth')
-const is_superadmin = require('../middleware/role-checking').is_superadmin
+//const is_superadmin = require('../middleware/role-checking').is_superadmin
 const is_user = require('../middleware/role-checking').is_user
+
+const process_file = require('../middleware/file-upload')
 
 
 // * ------------------------------ PROJECT DAILY NOTES ------------------------------ * //
@@ -38,7 +40,9 @@ router.post('/tomorrow', is_auth,
 router.post('/confirm', is_auth,
     projectDailyNotesController.daily_confirmation_done)
 
-router.post('/:finance', is_auth, projectDailyNotesController.post_incomes_expenses)
+router.post('/:finance/delete', is_auth, projectDailyNotesController.delete_incomes_expenses)
+
+router.post('/:finance', is_auth, process_file, projectDailyNotesController.post_incomes_expenses)
 
 router.post('/', is_auth, projectDailyNotesController.post_dailynotes)
 

@@ -4,8 +4,8 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const cors = require('cors')
 const helmet = require('helmet')
-const swaggerUI = require('swagger-ui-express')
-const swaggerJSDoc = require('swagger-jsdoc') 
+const swaggerUI = require('swagger-ui-express') 
+const swaggerJSDoc = require('swagger-jsdoc')  
 const mongoose = require('mongoose') // * gunakan mmongoose
 const morgan = require('morgan')
 //const sequelize = require('./utils/db')
@@ -14,7 +14,7 @@ const morgan = require('morgan')
 const PORT = process.env.PORT
 
 
-// * IMPORT DB SCHEMA
+// * IMPORT DB SCHEMA (sql - sequelize)
 //require('./utils/db-schema')
 
 
@@ -69,6 +69,7 @@ const swaggerSpecs = swaggerJSDoc(swaggerOptions)
 const app = express()
 
 app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({ extended: false }))
 app.use(cors())
 app.use(helmet({
     contentSecurityPolicy: false, // disable content security policy
@@ -93,7 +94,6 @@ app.use('/workhours', workhourRoutes)
 app.use('/days', dayRoutes)
 app.use('/projects/daily-notes', projectDailyNotesRoutes)
 app.use('/projects', projectRoutes)
-// app.use('/daily-notes', dailynotesRoutes)
 
 
 // * ------ ERROR HANDLING
@@ -157,7 +157,7 @@ async function startServer(){
         // await sequelize.authenticate()
         await mongoose.connect(process.env.MONGODB_URI)
         app.listen(PORT)
-        console.log('Connected to PORT ' + process.env.PORT)
+        console.log('Connected, see swagger documentation on http://localhost:' + process.env.PORT + '/api-docs')
     } catch (e){
         console.log(e)
     }

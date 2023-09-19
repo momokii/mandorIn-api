@@ -172,13 +172,17 @@
  *                                         type: string
  *                                       total:
  *                                         type: number
+ *                                       file:
+ *                                         type: string    
  *                                   expenses:
  *                                     type: object
  *                                     properties:
  *                                       data:
  *                                         type: string
  *                                       total:
- *                                         type: number    
+ *                                         type: number   
+ *                                       file:
+ *                                         type: string   
  *                               total_incomes:
  *                                 type: number      
  *                               total_expenses:
@@ -239,7 +243,7 @@
 
 
 
-// FIXME mungkin tambahan properti ketika sudah jadi file controllernya 
+
 // * GET /projects/daily-notes
 /**
  * @swagger
@@ -315,6 +319,8 @@
  *                                               type: string
  *                                             total:
  *                                               type: number
+ *                                             file:
+ *                                               type: string     
  *                                         expenses:
  *                                           type: object
  *                                           properties:
@@ -322,6 +328,8 @@
  *                                               type: string
  *                                             total:
  *                                               type: number  
+ *                                             file:
+ *                                               type: string 
  *                                         workers_notes:
  *                                           type: array
  *                                           items:
@@ -375,6 +383,8 @@
  *                                         type: string
  *                                       total:
  *                                         type: number
+ *                                       file:
+ *                                         type: string    
  *                                   expenses:
  *                                     type: object
  *                                     properties:
@@ -382,6 +392,8 @@
  *                                         type: string
  *                                       total:
  *                                         type: number  
+ *                                       file:
+ *                                         type: string  
  *                                   workers_notes:
  *                                     type: array
  *                                     items:
@@ -468,13 +480,17 @@
  *                                         type: string
  *                                       total:
  *                                         type: number
+ *                                       file:
+ *                                         type: string  
  *                                   expenses:
  *                                     type: object
  *                                     properties:
  *                                       data:
  *                                         type: string
  *                                       total:
- *                                         type: number  
+ *                                         type: number 
+ *                                       file:
+ *                                         type: string    
  *                                   workers_notes:
  *                                     type: array
  *                                     items:
@@ -994,6 +1010,84 @@
 
 
 
+// * POST /projects/daily-notes/:finance/delete
+/**
+ * @swagger
+ * /projects/daily-notes/{finance}/delete:
+ *   post:
+ *     summary: Delete daily-notes data
+ *     tags: [Project-DailyNotes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: finance
+ *         description: sesuaikan dengan data ingin di post "incomes" / "expenses"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               id_project:
+ *                 type: string
+ *               file_only:
+ *                 type: boolean
+ *
+ *     responses:
+ *       '200':
+ *         description:
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 errors:
+ *                   example: false
+ *                 message:
+ *                   example: Berhasil hapus data daily notes
+ *
+ *       '401':
+ *         description: Akun tidak punya akses
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 errors:
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *       '404':
+ *         description: Data tidak ditemukan
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 errors:
+ *                   example: true
+ *                 message:
+ *                   type: string    
+ *       '500':
+ *         description: Internal Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 errors:
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *
+ *
+ */
+
+
+
+
 
 // * POST /projects/daily-notes/:finance
 /**
@@ -1011,7 +1105,7 @@
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
@@ -1021,6 +1115,8 @@
  *                 type: string
  *               total:
  *                 type: number
+ *               file:
+ *                 type: file  
  *
  *     responses:
  *       '200':
@@ -1046,6 +1142,17 @@
  *                   example: true
  *                 message:
  *                   type: string
+ *       '404':
+ *         description: Data tidak ditemukan
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 errors:
+ *                   example: true
+ *                 message:
+ *                   type: string   
  *       '500':
  *         description: Internal Server Error
  *         content:
