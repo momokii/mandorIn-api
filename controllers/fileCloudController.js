@@ -1,6 +1,6 @@
 const statusCode = require('../utils/status-code').httpStatus_keyValue
-const { Storage } = require('@google-cloud/storage')
-const { format } = require('util')
+const {Storage} = require('@google-cloud/storage')
+const {format} = require('util')
 const storage = new Storage({ keyFilename: "./mandorin-sa.json" })
 const bucket = storage.bucket('mandorin-dev')
 
@@ -52,8 +52,7 @@ exports.upload_file = async (req, res, next) => {
             // * req.daily_notes_type -> "incomes/expenses"
             filename = req.daily_notes_date.toString() + '-' + req.daily_notes_type + '-' + random_name + "." + file_ext
 
-            // * delete jika sebelumnya ada file
-            if(req.file_now){
+            if(req.file_now){ // * delete jika sebelumnya ada file
                 const file_del_arr = req.file_now.split('/')
                 const del_file = file_del_arr[file_del_arr.length - 1]
                 const filepath_del = 'daily-notes/' + del_file
@@ -61,8 +60,7 @@ exports.upload_file = async (req, res, next) => {
             }
         }
 
-        // * full filepath 
-        const uploadpath = foldername + filename 
+        const uploadpath = foldername + filename // * full filepath 
 
         // ! upload process 
         const blob = bucket.file(uploadpath)

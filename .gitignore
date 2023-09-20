@@ -2,6 +2,7 @@
 node_modules
 .idea
 models/sql-models
+.vscode
 
 # file
 .env
@@ -11,3 +12,4 @@ utils/db.js
 utils/db-schema.js
 mandorin-sa.json
 .eslintrc.json 
+playgroud.js

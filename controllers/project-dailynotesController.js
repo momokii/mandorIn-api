@@ -1,6 +1,7 @@
 const statusCode = require('../utils/status-code').httpStatus_keyValue
 const format_date = require('date-fns/format')
 const BaseDailyNotes = require('../models/daily-notes-struct')
+const date_formatter = require('date-fns')
 
 // * gunakan mongoose
 const Project = require('../models/project')
@@ -23,13 +24,16 @@ function throw_err(msg, code){
 
 function is_superadmin_or_admin_pm(req, pm_id) {
     if(req.role !== 1 && (req.user_id.toString() !== pm_id.toString())) {
-        throw_err("Akun tidak punya akses", statusCode['404_not_found'])
+        throw_err("Akun tidak punya akses", statusCode['401_unauthorized'])
     }
 }
 
 
-// * fungsi untuk filtering -> ketika daily confirmation = true -> maka data pada hari tersebut sudah tidak bisa di edit lagi
-function is_daily_confirmation_true(project){
+
+function is_daily_confirmation_true(project, res){
+    /*
+     * filtering -> ketika daily confirmation = true -> maka data pada hari tersebut sudah tidak bisa di edit lagi
+    */
     let daily_notes = project.daily_notes
 
     let today_date = today_date_str()
@@ -46,18 +50,21 @@ function is_daily_confirmation_true(project){
     }
 }
 
-// * fungsi filtering -> jika absnsi harian sudah dikonfirmasi
-function is_attendances_confirmation_true(daily_note){
+
+function is_attendances_confirmation_true(daily_note, res){
+    /*
+    * filtering -> jika absensi harian sudah dikonfirmasi
+    */
     if(daily_note.daily_attendances){
         return res.status(statusCode['200_ok']).json({
             errors: false,
             message: "Absensi harian sudah dikonfirmasi, user tidak bisa lakukan absensi"
         })
-    }
+    } 
 }
 
 
-function is_project_done(project, msg){
+function is_project_done(project, msg, res){
     if(project.on_progress === false){
         return res.status(statusCode['200_ok']).json({
             errors: false,
@@ -69,13 +76,27 @@ function is_project_done(project, msg){
 
 function today_date_str(){
     /*
-        * akan return string date hari ini dengan format
+        * return string date hari ini dengan format
         * yyyy-MM-dd
         * ex : 2023-09-28
+        * zona : WIB
      */
-    const date = new Date()
+    const date = new Date() // * secara otomatis jika diformat akan langsung berubah ke dalam waktu WIB/ sesuai dengan waktu dilokal
     const formatted_date = format_date(date, "yyyy-MM-dd").toString()
     return formatted_date
+}
+
+
+function time_date_str(){
+    /*
+        * return string jam dengan format
+        * HH:mm:ss
+        * ex: 17:25:40
+        * zona : WIB
+    */
+   const time = new Date() // * secara otomatis jika diformat akan langsung berubah ke dalam waktu WIB/ sesuai dengan waktu dilokal
+   const formatted_time = format_date(time, "HH:mm:ss").toString()
+   return formatted_time
 }
 
 
@@ -88,7 +109,7 @@ function today_date_str(){
 // ! -------------------------------- ---------- ------------------------------ * //
 // * -------------------------------- --GET-- ------------------------------ * //
 // ! ------------------------------------------- ------------------------------ * //
-
+// TODO tambah summary data dari semua absensi yang dilakukan
 exports.get_workers_daily_notes_summary = async (req, res, next) => {
     try{
         /*
@@ -480,10 +501,10 @@ exports.workers_delete_post_notes = async (req, res, next) => {
         }
 
         // * kalau project sudah DONE maka tidak bisa post
-        is_project_done(project, "Project sudah selesai, tidak bisa jalankan proses")
+        is_project_done(project, "Project sudah selesai, tidak bisa jalankan proses", res)
 
         // * jika konfirmasi harian sudah true tidak bisa post
-        is_daily_confirmation_true(project)
+        is_daily_confirmation_true(project, res)
 
         let user_id_project = workers.id_project
         if(user_id_project === null){
@@ -542,10 +563,10 @@ exports.workers_post_notes = async (req, res, next) => {
         }
 
         // * kalau project sudah DONE maka tidak bisa post
-        is_project_done(project, "Project sudah selesai, tidak bisa jalankan proses")
+        is_project_done(project, "Project sudah selesai, tidak bisa jalankan proses", res)
 
         // * jika konfirmasi harian sudah true tidak bisa post
-        is_daily_confirmation_true(project)
+        is_daily_confirmation_true(project, res)
 
         // * cek user terlibat dalam project terkait atau tidak
         let project_id = workers.id_project
@@ -630,10 +651,10 @@ exports.post_notes_tomorrow = async (req, res, next) => {
         is_superadmin_or_admin_pm(req, project.id_pm)
 
         // * kalau project sudah DONE maka tidak bisa post
-        is_project_done(project, "Project sudah selesai, tidak bisa jalankan proses")
+        is_project_done(project, "Project sudah selesai, tidak bisa jalankan proses", res)
 
         // * jika konfirmasi harian sudah true tidak bisa post
-        is_daily_confirmation_true(project)
+        is_daily_confirmation_true(project, res)
         // ! --------------------------- ----------------- --------------------------- * //
 
         const date = new Date()
@@ -677,10 +698,10 @@ exports.daily_attendances_confirmation = async (req, res, next) => {
         is_superadmin_or_admin_pm(req, project.id_pm)
 
         // * kalau project sudah DONE maka tidak bisa post
-        is_project_done(project, "Project sudah selesai, tidak bisa jalankan proses")
+        is_project_done(project, "Project sudah selesai, tidak bisa jalankan proses", res)
 
         // * jika konfirmasi harian sudah true tidak bisa post
-        is_daily_confirmation_true(project)
+        is_daily_confirmation_true(project, res)
         // ! --------------------------- ----------------- --------------------------- * //
 
         const date_formatted = today_date_str()
@@ -720,7 +741,8 @@ exports.daily_attendances_confirmation = async (req, res, next) => {
 
 
 
-// FIXME belum disesuaikan untuk response di harapkan
+// TODO update untuk juga simpan waktu absen 
+// TODO update untuk absen gunakan filter cek waktu absensi
 exports.post_attendance_workers = async (req, res, next) => {
     try{
         const id_project = req.body.id_project
@@ -745,10 +767,10 @@ exports.post_attendance_workers = async (req, res, next) => {
         }
 
         // * kalau project sudah DONE maka tidak bisa post
-        is_project_done(project, "Project sudah selesai, tidak bisa jalankan proses")
+        is_project_done(project, "Project sudah selesai, tidak bisa jalankan proses", res)
 
         // * jika konfirmasi harian sudah true tidak bisa post
-        is_daily_confirmation_true(project)
+        is_daily_confirmation_true(project, res)
 
         // ! --------------------------- ----------------- --------------------------- * //
 
@@ -757,7 +779,7 @@ exports.post_attendance_workers = async (req, res, next) => {
         for(let note of project.daily_notes){
             if(formatted_date.toString() === note.date.toString()){
                 // ! checking daily confirmation attendances
-                is_attendances_confirmation_true(note)
+                is_attendances_confirmation_true(note, res)
 
                 for(let worker of note.attendances){
                     if(worker.id_user.toString() === user._id.toString()){
@@ -781,11 +803,14 @@ exports.post_attendance_workers = async (req, res, next) => {
                 message: "User sudah absen hari ini"
             })
         } else {
+            const attend_time = time_date_str()
             await project.save() //* save project -> karena data absen terkait ada di project bukan user
+
+            const message_response = "User " + user.username + " berhasil absen untuk tanggal " + today_date_str() + " pukul " + attend_time
 
             res.status(statusCode['200_ok']).json({
                 errors: false,
-                message: "User {username} berhasil absen untuk hari {tanggal} - {waktu}"
+                message: message_response
             })
         }
     } catch (e) {
@@ -818,7 +843,7 @@ exports.daily_confirmation_done = exports.template = async (req, res, next) => {
         is_superadmin_or_admin_pm(req, project.id_pm.toString())
 
         // * kalau project sudah DONE maka tidak bisa post
-        is_project_done(project, "Project sudah selesai, tidak bisa jalankan proses")
+        is_project_done(project, "Project sudah selesai, tidak bisa jalankan proses", res)
         // ! --------------------------- ----------------- --------------------------- * //
 
         // * cari daily notes hari ini
@@ -874,9 +899,9 @@ exports.delete_incomes_expenses = async (req, res, next) => {
 
         is_superadmin_or_admin_pm(req, project.id_pm)
 
-        is_daily_confirmation_true(project)
+        is_daily_confirmation_true(project, res)
 
-        is_project_done(project, "Project sudah selesai, tidak bisa jalankan proses")
+        is_project_done(project, "Project sudah selesai, tidak bisa jalankan proses", res)
 
         // ! --------------------------- ----------------- --------------------------- * //
         const ket = req.params.finance 
@@ -950,10 +975,10 @@ exports.post_incomes_expenses = async (req, res, next) => {
         is_superadmin_or_admin_pm(req, project.id_pm)
 
         // * kalau project sudah DONE maka tidak bisa post
-        is_project_done(project, "Project sudah selesai, tidak bisa post finance data")
+        is_project_done(project, "Project sudah selesai, tidak bisa post finance data", res)
 
         // ! filter tambahan--> cek daily confirmation sudah TRUE belum
-        is_daily_confirmation_true(project)
+        is_daily_confirmation_true(project, res)
         // ! --------------------------- ----------------- --------------------------- * //
 
         const formatted_date = today_date_str()
@@ -1014,7 +1039,7 @@ exports.post_incomes_expenses = async (req, res, next) => {
 
 
 
-
+// TODO update dengan tambah konsep extra-day
 exports.post_dailynotes = async (req, res, next) => {
     try{
         const id_project = req.body.id_project
@@ -1029,37 +1054,44 @@ exports.post_dailynotes = async (req, res, next) => {
         is_superadmin_or_admin_pm(req, project.id_pm)
 
         // * kalau project sudah DONE maka tidak usah buat daily nots namun tidak error
-        is_project_done(project, "Project sudah selesai, tidak bisa buat daily notes baru")
+        is_project_done(project, "Project sudah selesai, tidak bisa buat daily notes baru", res)
 
         // * jika konfirmasi harian sudah true tidak bisa post
-        is_daily_confirmation_true(project)
+        is_daily_confirmation_true(project, res)
 
-        const this_day_date = new Date()
-        const formatted_date = format_date(this_day_date, "yyyy-MM-dd").toString()
+        const formatted_date = today_date_str()
 
         // * cek apakah sudah pernah ajukan buat daily notes hari ini (untuk jaga jaga) jika sudah ada maka akan gagal
-        project.daily_notes.forEach(data => {
+        for (let data of project.daily_notes){
             if(data.date.toString() === formatted_date.toString()){
-                throw_err("Hari ini sudah buat daily-notes", statusCode['400_bad_request'])
+                return res.status(statusCode['200_ok']).json({
+                    errors: false,
+                    message: "Hari ini sudah buat daily-notes"
+                })
             }
-        })
+        }
 
         // ! --------------------------- ----------------- --------------------------- * //
-
-        // * objek daily notes baru
-        const new_daily_notes = new BaseDailyNotes(formatted_date)
-        //* tambah terkait absen
-        new_daily_notes.attendances = []
-        //* tambah data worker ke daily notes
+        // * pastikan untuk daily-notes hari sebelumnya set konfirmasi hari dan absensi
+        if(project.daily_notes.length >= 1){
+            // * cek jika jika baru inisiasi project maka daily-notes bisa saja baru 1 maka tidak ada hari kemarin dan bahkan bisa belum ada daily-notes
+            const last_day_daily_notes = project.daily_notes[project.daily_notes.length - 1]
+            last_day_daily_notes.daily_confirmation = true 
+            last_day_daily_notes.daily_attendances = true
+        }
+        
+        const new_daily_notes = new BaseDailyNotes(formatted_date) //* new daily-note
+        
+        new_daily_notes.attendances = [] //* add attendances array with worker
         project.workers.forEach(id_workers => {
             const data_attendance = {
                 id_user : id_workers,
-                attendances : false // * default value belum absen
+                attendances : false // * default value attendances
             }
             new_daily_notes.attendances.push(data_attendance)
         })
 
-        // ? ---------------------- update Daily Weather Prediction ----------------------
+        // ? ------------------- update Daily Weather Prediction -------------------
 
         const weather = await Weather.findOne({
             id_project : project._id.toString()
@@ -1069,27 +1101,28 @@ exports.post_dailynotes = async (req, res, next) => {
         const LAT = project.lat
         const api_url = "https://api.open-meteo.com/v1/forecast?latitude=" + LONG.toString() +  "&longitude=" + LAT.toString() + "&hourly=temperature_2m,precipitation_probability&timezone=Asia%2FBangkok&forecast_days=1"
         const response = await axios.get(api_url)
-        const response_data = response.data // response asli
+        if(response.status === 200){
+            const response_data = response.data // response asli
 
-        // * format untuk dapatkan date dari response api
-        let date_forecast = response_data.hourly.time[0]
-        const indexT = date_forecast.indexOf("T")
+            // * format untuk dapatkan date dari response api
+            let date_forecast = response_data.hourly.time[0]
+            const indexT = date_forecast.indexOf("T")
 
-        // * tidak perlu format, tetap berikan number (untuk prep dan temperature) dan diformat di FE saja
-        const hourly_str = response_data.hourly.time.map(data => {
-            const index_T = data.indexOf("T")
-            return data.substring(index_T + 1)
-        })
+            // * tidak perlu format, tetap berikan number (untuk prep dan temperature) dan diformat di FE saja
+            const hourly_str = response_data.hourly.time.map(data => {
+                const index_T = data.indexOf("T")
+                return data.substring(index_T + 1)
+            })
 
-        // * format response get data ke model weather
-        weather.timezone = response_data.timezone // * sesuaikan sendiri
-        weather.elevation = response_data.elevation // * berapa mdpl long lat terkait
-        weather.temp_forecast = response_data.hourly.temperature_2m // * data asli 1 hari
-        weather.precipitation_probability = response_data.hourly.precipitation_probability
-        weather.hourly = hourly_str
-        weather.date = date_forecast.substring(0, indexT)
-
-        // ? ------------------------------------------------------------------------------
+            // * format response get data ke model weather
+            weather.timezone = response_data.timezone // * sesuaikan sendiri
+            weather.elevation = response_data.elevation // * berapa mdpl long lat terkait
+            weather.temp_forecast = response_data.hourly.temperature_2m // * data asli 1 hari
+            weather.precipitation_probability = response_data.hourly.precipitation_probability
+            weather.hourly = hourly_str
+            weather.date = date_forecast.substring(0, indexT)
+        }
+        // ? --------------------------------------------------------------------
 
         // * tambah data daily notes baru ke project
         project.daily_notes.push(new_daily_notes)

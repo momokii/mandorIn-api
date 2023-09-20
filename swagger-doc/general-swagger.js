@@ -44,6 +44,6 @@
 /**
  * @swagger
  * tags:
- *   name: Days (Hari) - SuperAdmin
- *   description: Data Hari
+ *   name: Days (Hari) 
+ *   description: Data Hari - SuperAdmin
  */ 

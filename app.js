@@ -79,9 +79,8 @@ app.use(helmet({
     referrerPolicy: { policy: 'no-referrer' } // set referrer policy to no-referrer
 }))
 
-// ? set morgan console logging
 const customFormat = ':date[iso] | :status | :response-time ms | :remote-addr | :method :url';
-app.use(morgan(customFormat));
+app.use(morgan(customFormat)); // ? set morgan console logging
 
 
 // * ------ ROUTES SET
@@ -96,7 +95,7 @@ app.use('/projects/daily-notes', projectDailyNotesRoutes)
 app.use('/projects', projectRoutes)
 
 
-// * ------ ERROR HANDLING
+// * ------ GLOBAL ERROR HANDLING
 app.use((error, req, res, next) => {
     console.log(error)
     const status = error.statusCode || 500

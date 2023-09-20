@@ -2,7 +2,7 @@ const router = require('express').Router()
 const projectDailyNotesController = require('../controllers/project-dailynotesController')
 
 const is_auth = require('../middleware/is-auth')
-//const is_superadmin = require('../middleware/role-checking').is_superadmin
+const is_superadmin = require('../middleware/role-checking').is_superadmin
 const is_user = require('../middleware/role-checking').is_user
 
 const process_file = require('../middleware/file-upload')

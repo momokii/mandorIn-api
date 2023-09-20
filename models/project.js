@@ -1,6 +1,8 @@
 const mongoose = require('mongoose')
 const Schema = mongoose.Schema
 
+// TODO update untuk daily-notes absensi tambah properti untuk waktu absensi
+// TODO (jika jadi) update properti untuk extra day
 const projectSchema = new Schema({
     nama : {
         type: String,
