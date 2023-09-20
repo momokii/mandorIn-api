@@ -7,7 +7,8 @@ const {validationResult} = require("express-validator");
 const bcrypt = require("bcrypt");
 const statusCode = require('../utils/status-code').httpStatus_keyValue
 // * ganti gunakan mongoose
-const User = require('../models/user')
+const User = require('../models/user');
+const user = require("../models/user");
 
 // * ------------------------------ FUNCTION ------------------------------ * //
 
@@ -180,7 +181,7 @@ exports.get_all_user = async (req, res, next) => {
         //const data = users
         // * karena nosql dan gunakan struktur sama pada data admin dan user -> ada penyesuaian struktur yang ditampilkan berdasarkan role-nya
         const data = users.map(data => {
-            data_return = {
+            let data_return = {
                 id: data._id,
                 username: data.username,
                 nama: data.nama,
@@ -366,7 +367,7 @@ exports.delete_user = async (req, res, next) => {
         // * -------------------------------------------------------
 
         //await user.destroy()
-        await User.findByIdAndRemove(user_id)
+        //await User.findByIdAndRemove(user_id)
 
         res.status(statusCode['200_ok']).json({
             errors: false,
@@ -374,6 +375,45 @@ exports.delete_user = async (req, res, next) => {
         })
 
     } catch (e) {
+        if(!e.statusCode){
+            e.statusCode = statusCode['500_internal_server_error']
+        }
+        next(e)
+    }
+}
+
+
+
+
+
+exports.post_change_username = async (req, res, next) => {
+    try{
+
+        // ! --------------------- FILTER & AUTH USER -------------------- * //
+        const id_user = req.body.id_user 
+        const new_username = req.body.new_username 
+
+        const user_change = await User.findById(id_user)
+        if(!user_change){
+            throw_err("Data akun tidak ditemukan", statusCode['404_not_found'])
+        }
+
+        const val_err = validationResult(req)
+        if(!val_err.isEmpty()){
+            throw_err(val_err.array()[0].msg, statusCode['400_bad_request'])
+        }
+        // ! ------------------- ----------------- ---------------------- * //
+
+        user_change.username = new_username
+
+        await user_change.save()
+        
+        res.status(statusCode['200_ok']).json({
+            errors: false,
+            message: "Berhasil ubah username user"
+        })
+
+    } catch(e) {
         if(!e.statusCode){
             e.statusCode = statusCode['500_internal_server_error']
         }

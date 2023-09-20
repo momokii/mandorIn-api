@@ -55,21 +55,24 @@ router.post('/', is_auth , is_superadmin, [
 
 
 
-router.patch('/', is_auth, is_itself,
-    // [body('username')
-    //     .isAlphanumeric()
-    //     .custom((value, {req}) => {
-    //         return (async () => {
-    //             const user = await User.findOne({
-    //                 username : value
-    //             })
-    //             if(user && user.id !== req.body.id_user){
-    //                 throw_err('Username sudah digunakan, coba yang lain', statusCode['400_bad_request'])
-    //             }
-    //         })()
-    //     })],
-    userController.change_info)
-
+router.patch('/username', is_auth, is_superadmin,[
+    body('new_username')
+    .isAlphanumeric().withMessage("format username tidak boleh gunakan spasi dan harus mengandung angka")
+    .custom((value, {req}) => {
+        return (async () => {
+            if(value.length < 5){
+                throw_err("Minimal username setidaknya 5 karakter dengan angka", statusCode['400_bad_request'])
+            }
+            const user = await User.findOne({
+                username : value
+            })
+            if(user && (user.id !== req.body.id_user)){
+                throw_err('Username sudah digunakan, coba yang lain', statusCode['400_bad_request'])
+            }
+        })()
+    })
+] ,
+userController.post_change_username)
 
 
 router.patch('/password', is_auth, is_itself, [
@@ -84,6 +87,10 @@ router.patch('/password', is_auth, is_itself, [
             minUppercase: 1
         })
 ], userController.change_password)
+
+
+
+router.patch('/', is_auth, is_itself, userController.change_info)
 
 
 

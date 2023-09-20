@@ -493,6 +493,80 @@
 
 
 
+// * PATCH /users/username
+/**
+ * @swagger
+ * /users/username:
+ *   patch:
+ *     summary: Edit username akun - superadmin only
+ *     tags: [User]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               id_user:
+ *                 type: string
+ *               new_username:
+ *                 type: string
+ *
+ *     responses:
+ *       '200':
+ *         description:
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 errors:
+ *                   example: false
+ *                 message:
+ *                   example: Berhasil ubah username akun
+ *       '400':
+ *         description: Kesalahan pemrosesan
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 errors:
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *       '401':
+ *         description: Akun tidak punya akses
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 errors:
+ *                   example: true
+ *                 message:
+ *                   example: Akun tidak punya akses
+ *       '500':
+ *         description: Internal Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 errors:
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *
+ *
+ */
+
+
+
+
+
 // * PATCH /users
 /**
  * @swagger
@@ -525,7 +599,7 @@
  *                 errors:
  *                   example: false
  *                 message:
- *                   example: Berhasi edit informasi akun
+ *                   example: Berhasil edit informasi akun
  *       '400':
  *         description: Kesalahan pemrosesan edit info user
  *         content:
@@ -572,7 +646,7 @@
  * @swagger
  * /users:
  *   delete:
- *     summary: Delete akun lain - superadmin only
+ *     summary: Delete akun lain - superadmin only (NOT DEVELOPED)
  *     tags: [User]
  *     security:
  *       - bearerAuth: []

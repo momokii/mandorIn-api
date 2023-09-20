@@ -40,7 +40,7 @@ exports.edit_roles_name = async (req, res, next) => {
         const id = req.body.id
         const nama_baru = req.body.nama
 
-        updated_role = await Role.findById(id)
+        let updated_role = await Role.findById(id)
         updated_role.name = nama_baru
         await updated_role.save()
 

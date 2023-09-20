@@ -15,7 +15,6 @@ function throw_err(msg, code){
 }
 
 // * ------------------------------ CONTROLLER ------------------------------ * //
-
 exports.login = async (req, res, next) => {
     try {
 
@@ -38,7 +37,7 @@ exports.login = async (req, res, next) => {
         const auth_token = crypto.randomBytes(16).toString('hex')
         const jwt_token = jwt.sign({
             user_id: user.id,
-            username: user.username,
+            //username: user.username,
             auth: auth_token
         }, process.env.JWT_SECRET)
 
