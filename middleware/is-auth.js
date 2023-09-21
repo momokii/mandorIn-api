@@ -4,14 +4,15 @@ const statusCode = require('../utils/status-code').httpStatus_keyValue
 // * ganti gunakan mongoose
 const User = require('../models/user')
 
+function err(msg, code){
+    const err = new Error(msg)
+    err.statusCode = code
+    throw err
+}
+
+
 module.exports = async (req, res, next) => {
     try{
-        function err(msg, code){
-            const err = new Error(msg)
-            err.statusCode = code
-            throw err
-        }
-
         const authHeader = req.get('Authorization')
         if(!authHeader){
             err('Needed Bearer Authorization Header', statusCode['401_unauthorized'])
@@ -29,7 +30,9 @@ module.exports = async (req, res, next) => {
             err('Token Tidak Valid sini', statusCode['401_unauthorized'])
         }
 
-        if(decode_token.auth !== user.token.auth || decode_token.username !== user.username){
+        if(decode_token.auth !== user.token.auth 
+            //|| decode_token.username !== user.username
+            ){
             err('Token Tidak Valid', statusCode['401_unauthorized'])
         }
 

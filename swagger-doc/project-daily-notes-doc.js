@@ -53,6 +53,17 @@
  *                                         type: string
  *                                       nama:
  *                                         type: string   
+ *                               user_attendance_summary:
+ *                                 type: object
+ *                                 properties:
+ *                                   total_work_day:
+ *                                     type: number    
+ *                                   total_attendance:
+ *                                     type: number   
+ *                                   user_attendance_percentage:
+ *                                     type: number   
+ *                                   total_user_notes:
+ *                                     type: number          
  *                               user_daily_notes:
  *                                 type: object
  *                                 properties:
@@ -73,6 +84,8 @@
  *                                           type: string
  *                                         attendances: 
  *                                           type: boolean
+ *                                         attendances_time:
+ *                                           type: string     
  *                                         worker_note:
  *                                           type: string     
  *

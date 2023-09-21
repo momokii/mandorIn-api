@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 const Schema = mongoose.Schema
 
-// TODO update untuk daily-notes absensi tambah properti untuk waktu absensi
+
 // TODO (jika jadi) update properti untuk extra day
 const projectSchema = new Schema({
     nama : {
@@ -103,18 +103,16 @@ const projectSchema = new Schema({
         attendances: [{
             id_user: {
                 type: Schema.Types.ObjectId,
-                //required: true,
                 ref: "User"
             },
             attendances: {
                 type: Boolean,
-                //required: true,
                 default: false
             },
-            // attendances_time: {
-            //     type: Date,
-            //     default: null
-            // }
+            attendances_time: {
+                type: String,
+                default: null
+            }
         }]
     }]
 }, {

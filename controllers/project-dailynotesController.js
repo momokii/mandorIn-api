@@ -109,7 +109,7 @@ function time_date_str(){
 // ! -------------------------------- ---------- ------------------------------ * //
 // * -------------------------------- --GET-- ------------------------------ * //
 // ! ------------------------------------------- ------------------------------ * //
-// TODO tambah summary data dari semua absensi yang dilakukan
+
 exports.get_workers_daily_notes_summary = async (req, res, next) => {
     try{
         /*
@@ -118,9 +118,8 @@ exports.get_workers_daily_notes_summary = async (req, res, next) => {
             * ketika id_project query ada -> maka dapatkan dari data project terkait (bisa get data history projct yang pernah terlibat)
          */
 
-        // ! --------------------------- FILTER & AUTH USER --------------------------- * //
+        // ! ---------------------- FILTER & AUTH USER ---------------------- * //
         // * pengecekan gunakan project berdasarkan id_project atau project yang sekarang sedang dikerjakan
-
         const user = await User.findById(req.user_id)
         let project_id = user.id_project
         if(req.query.id_project){
@@ -128,7 +127,7 @@ exports.get_workers_daily_notes_summary = async (req, res, next) => {
         }
 
         if(project_id === null){
-            // * ketika misal tidak gunakan query id project dan user sedang tidak aktif pada project manapun
+            // * jika user tidak ikut prject apapun
             throw_err("User sedang tidak aktif pada sebuah project", statusCode['400_bad_request'])
         }
 
@@ -177,7 +176,7 @@ exports.get_workers_daily_notes_summary = async (req, res, next) => {
             daily_notes = daily_notes.slice(start_index, end_index + 1)
         }
 
-        // ! --------------------------- ----------------- --------------------------- * //
+        // ! --------------------- ----------------- ----------------------- * //
 
         const total_data = daily_notes.length
         const page = parseInt(req.query.page) || 1
@@ -188,6 +187,8 @@ exports.get_workers_daily_notes_summary = async (req, res, next) => {
 
         // * restruktur daily_notes data
         let user_data = []
+        let total_user_attend = 0
+        let total_user_notes = 0
         daily_notes.forEach(note => {
             const date = note.date
             const worker_notes = note.workers_notes
@@ -196,6 +197,9 @@ exports.get_workers_daily_notes_summary = async (req, res, next) => {
                 for(let note_worker of worker_notes){
                     if(note_worker.id_user.toString() === user._id.toString()){
                         worker_note = note_worker.data
+                        if(worker_note){
+                            total_user_notes = total_user_notes + 1
+                        }
                         break
                     }
                 }
@@ -207,9 +211,13 @@ exports.get_workers_daily_notes_summary = async (req, res, next) => {
                         date: date,
                         id_user: attendance.id_user.toString(),
                         attendances: attendance.attendances,
+                        attendance_time: attendance.attendances_time,
                         worker_note: worker_note
                     }
                     user_data.push(user_attendance_data)
+                    if(attendance.attendances){
+                        total_user_attend = total_user_attend + 1
+                    }
                     break
                 }
             }
@@ -227,6 +235,12 @@ exports.get_workers_daily_notes_summary = async (req, res, next) => {
                         id_pm : project.id_pm._id,
                         nama: project.id_pm.nama
                     }
+                },
+                user_attendance_summary: {
+                    total_work_day: total_data,
+                    total_attendance: total_user_attend,
+                    user_attendance_percentage: parseFloat((total_user_attend / total_data).toFixed(2)),
+                    total_user_notes: total_user_notes
                 },
                 user_daily_notes: {
                     total_data: total_data,
@@ -261,7 +275,6 @@ exports.get_daily_notes_finance_summary = async (req, res, next) => {
         // ! --------------------------- FILTER & AUTH USER --------------------------- * //
         const id_project = req.query.id_project
         const project = await Project.findById(id_project)
-            //.lean()
         if(!project){
             throw_err("Data tidak ditemukan", statusCode['404_not_found'])
         }
@@ -358,7 +371,7 @@ exports.get_daily_notes = async (req, res, next) => {
      * dengan prioritas urutan TODAY > DATE > PAGINATION
      */
     try{
-        // ! --------------------------- FILTER & AUTH USER --------------------------- * //
+        // ! --------------------- FILTER & AUTH USER -------------------- * //
         const id_project = req.query.id_project
         const project = await Project.findById(id_project).lean()
         if(!project){
@@ -368,7 +381,7 @@ exports.get_daily_notes = async (req, res, next) => {
         //console.log(req.user_id.toString(), project.id_pm.toString())
         is_superadmin_or_admin_pm(req, project.id_pm.toString())
 
-        // ! --------------------------- ----------------- --------------------------- * //
+        // ! ------------------- ----------------- ---------------------- * //
 
         let response = {
             errors: false,
@@ -390,7 +403,7 @@ exports.get_daily_notes = async (req, res, next) => {
             // * get data tomorrow_note dari hari kemarin (daily-notes hari sebelumnya)
             let today_notes_from_yesterday
             const yesterday_index = (project.daily_notes.findIndex(data => data.date.toString() === today_str.toString())) - 1
-            console.log(yesterday_index)
+            
             if(yesterday_index === -1){ // * jika sekarang hari ke 1 -> maka tidak ada kemarin
                 today_notes_from_yesterday = null
             } else {
@@ -741,13 +754,16 @@ exports.daily_attendances_confirmation = async (req, res, next) => {
 
 
 
-// TODO update untuk juga simpan waktu absen 
-// TODO update untuk absen gunakan filter cek waktu absensi
+
+
 exports.post_attendance_workers = async (req, res, next) => {
     try{
         const id_project = req.body.id_project
-        // ! --------------------------- FILTER & AUTH USER --------------------------- * //
+        // ! ---------------------- FILTER & AUTH USER ----------------------- * //
         const project = await Project.findById(id_project)
+            .populate({
+                path: "id_workhour"
+            })
         if(!project){
             throw_err("Data tidak ditemukan", statusCode['404_not_found'])
         }
@@ -772,10 +788,12 @@ exports.post_attendance_workers = async (req, res, next) => {
         // * jika konfirmasi harian sudah true tidak bisa post
         is_daily_confirmation_true(project, res)
 
-        // ! --------------------------- ----------------- --------------------------- * //
+        // ! ----------------------- ----------------- ---------------------- * //
 
         const formatted_date = today_date_str()
         let is_attended
+        const work_start_hour = project.id_workhour.jam_masuk + ":00"
+        const user_attend_time = time_date_str()
         for(let note of project.daily_notes){
             if(formatted_date.toString() === note.date.toString()){
                 // ! checking daily confirmation attendances
@@ -785,11 +803,38 @@ exports.post_attendance_workers = async (req, res, next) => {
                     if(worker.id_user.toString() === user._id.toString()){
                         if(worker.attendances === true){
                             is_attended = true
+                        } else {
+                            // * filter waktu absen
+
+                            // * threshold set
+                            const [th_jam, th_menit, th_detik] = work_start_hour.split(":")
+                            const th_attend_time = new Date()
+                            th_attend_time.setHours(parseInt(th_jam, 10), parseInt(th_menit, 10), parseInt(th_detik, 10), 0)
+
+                            const th_attend_min_1h = date_formatter.subHours(th_attend_time, 1)
+                            const th_attend_max_1h = date_formatter.addHours(th_attend_time, 1)
+
+                            // * user attend_time set
+                            const [usr_jam, usr_menit, usr_detik] = user_attend_time.split(":")
+                            const user_time = new Date()
+                            user_time.setHours(parseInt(usr_jam, 10), parseInt(usr_menit, 10), parseInt(usr_detik, 10), 0)
+
+                            // * compare time
+                            if(user_time < th_attend_min_1h){
+                                const msg = "Absen gagal, minimal absen adalah pukul " + date_formatter.format(th_attend_min_1h, "HH:mm:ss") + " dan Anda lakukan absen pukul " + user_attend_time 
+                                throw_err(msg, statusCode['401_unauthorized'])
+                            }
+
+                            if(user_time > th_attend_max_1h){
+                                const msg = "Absen gagal, Anda terlambat, maksimal absen adalah pukul " + date_formatter.format(th_attend_max_1h, "HH:mm:ss") + " dan Anda lakukan absen pukul " + user_attend_time
+                                throw_err(msg, statusCode['401_unauthorized'])
+                            }
+
+                            console.log(th_attend_min_1h, th_attend_max_1h, work_start_hour, user_time)
+
+                            worker.attendances_time = user_attend_time
+                            worker.attendances = true
                         }
-                        // ! catatan -> belum atur bisa set waktu -> belum jadi buat ssuai dengan lokal time
-                        // worker.attendances_time = (new Date()).toLocaleString('en-US', 'Asia/Jakarta')
-                        //console.log(worker.attendances_time)
-                        worker.attendances = true
                         break
                     }
                 }
