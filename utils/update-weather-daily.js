@@ -2,7 +2,7 @@ const axios = require('axios');
 const Weather = require('../models/weather')
 
 
-// TODO move update weather flow in function
+
 exports.update_weather_daily = async (project) => {
     try{
 

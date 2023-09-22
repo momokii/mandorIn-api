@@ -4,7 +4,7 @@
  * /days:
  *   get:
  *     summary: Get semua data day (hari)
- *     tags: [Days (Hari) - SuperAdmin]
+ *     tags: [Days (Hari)]
  *     security:
  *       - bearerAuth: []
  *

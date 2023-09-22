@@ -21,6 +21,7 @@ const PORT = process.env.PORT
 // * ROUTES
 const authRoutes = require('./routes/auths')
 const dayRoutes = require('./routes/days')
+const dahsboardRoutes = require('./routes/dashboard')
 const userRoutes = require('./routes/users')
 const roleRoutes = require('./routes/roles')
 const projectRoutes = require('./routes/projects')
@@ -87,6 +88,7 @@ app.use(morgan(customFormat)); // ? set morgan console logging
 app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerSpecs))
 
 app.use(authRoutes)
+app.use('/dashboard', dahsboardRoutes)
 app.use('/users', userRoutes)
 app.use('/roles', roleRoutes)
 app.use('/workhours', workhourRoutes)
