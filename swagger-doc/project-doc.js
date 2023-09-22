@@ -1,3 +1,4 @@
+// TODO dokumentasi belum lengkap/ sesuai
 // * GET /projects/history
 /**
  * @swagger
@@ -120,7 +121,7 @@
 
 
 
-
+// TODO perbaiki response sesuai dengan perubahan pada controller (dokumentasi belum lengkap)
 // * GET /projects/:id_project
 /**
  * @swagger
@@ -204,6 +205,19 @@
  *                                 type: boolean
  *                               on_track:
  *                                 type: boolean
+ *                               project_summary:
+ *                                 type: object
+ *                                 properties:
+ *                                   total_length_project_target:
+ *                                     type: number   
+ *                                   total_day_from_start_now:
+ *                                     type: number   
+ *                                   total_work_day_now:
+ *                                     type: number   
+ *                                   total_non_work_day:
+ *                                     type: number    
+ *                                   total_extra_day_work:
+ *                                     type: number     
  *                               workers:
  *                                 type: array
  *                                 items:

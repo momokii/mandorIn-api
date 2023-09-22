@@ -3,6 +3,7 @@
  */
 class DailyNotesStruct {
     constructor(date){
+        this.is_extra_day = false
         this.daily_attendances = false
         this.daily_confirmation = false
         this.date = date

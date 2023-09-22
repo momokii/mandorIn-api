@@ -6,11 +6,11 @@
 const statusCode = require('../utils/status-code').httpStatus_keyValue
 const format_date = require('date-fns/format')
 const BaseDailyNotes = require('../models/daily-notes-struct')
+const date_formatter = require('date-fns')
 
 // * gunakan mongoose
 const Project = require('../models/project')
 const Workhour = require('../models/workhour')
-const Day = require('../models/day')
 const User = require('../models/user')
 const Weather = require('../models/weather')
 
@@ -72,7 +72,7 @@ function is_project_done(project, msg){
 
 
 // * ------------------------------ CONTROLLER ------------------------------ * //
-
+// TODO lakukan testing pada controller ini
 exports.get_all_projects_history = async(req, res, next) => {
     try{
 
@@ -88,13 +88,13 @@ exports.get_all_projects_history = async(req, res, next) => {
             // * jika admin/ role = 2
             if(req.role === 2){
                 total_data = await Project.countDocuments({
-                    name : { $regex : search.trim(), $options : "i" },
+                    name : {$regex : search.trim(), $options : "i"},
                     id_pm: req.user_id.toString(),
                     on_progress: false
                 })
 
                 project_history = await Project.find({
-                    name : { $regex : search.trim(), $options : "i" },
+                    name : {$regex : search.trim(), $options : "i"},
                     id_pm: req.user_id.toString(),
                     on_progress: false
                 })
@@ -214,6 +214,29 @@ exports.get_one_project = async (req, res, next) => {
             }
         })
         // ? -- -- --
+
+        // * project summary data
+        const start_date = new Date(project.start_project )
+        const end_target_date = new Date(project.end_target_project)
+        const total_work_day_now = project.daily_notes.length 
+        const total_length_project_target = date_formatter.differenceInDays(end_target_date, start_date)
+        const total_length_day_start_now = date_formatter.differenceInDays(start_date, new Date())
+        const total_free_day_now = total_length_day_start_now - total_work_day_now
+        // * count extra_day
+        let total_extra_day = 0
+        for (note of project.daily_notes){
+            if(note.is_extra_day === true){
+                total_extra_day = total_extra_day + 1
+            }
+        }
+        const project_summary = {
+            total_length_project_target: total_length_project_target,
+            total_day_from_start_now: total_length_day_start_now,
+            total_work_day_now : total_work_day_now,
+            total_non_work_day : total_free_day_now,
+            total_extra_day_work : total_extra_day
+        }
+        response.project_summary = project_summary
         response.workers = workers
         response.daily_notes = project.daily_notes
         // * -----------------------
@@ -245,6 +268,7 @@ exports.get_all_projects = async (req, res, next) => {
 
         // * misal ada search
         const search = req.query.search || ''
+        let all_project
 
         // * super admin
         if (req.role !== 1){
@@ -275,10 +299,10 @@ exports.get_all_projects = async (req, res, next) => {
             }
         } else {
             total_data = await Project.countDocuments({
-                nama : { $regex : search.trim() , $options: 'i'}
+                nama : {$regex : search.trim() , $options: 'i'}
             })
             all_project = await Project.find({
-                nama : { $regex : search.trim() , $options: 'i'}
+                nama : {$regex : search.trim() , $options: 'i'}
             })
                 .populate({
                     path : "id_workhour id_pm id_day_work_start id_day_work_last"
@@ -501,7 +525,7 @@ exports.edit_project = async (req, res, next) => {
         const description = req.body.description
         const target = req.body.target
 
-        // ! --------------------------- FILTER & AUTH USER --------------------------- * //
+        // ! --------------------- FILTER & AUTH USER --------------------- * //
 
         const project = await Project.findById(id_project)
         if(!project){
@@ -511,7 +535,7 @@ exports.edit_project = async (req, res, next) => {
 
         is_project_done(project, "Project sudah selesai, tidak bisa jalankan proses")
 
-        // ! --------------------------- ----------------- --------------------------- * //
+        // ! --------------------- ----------------- --------------------- * //
 
         if(nama !== '' && nama !== null){
             project.nama = nama

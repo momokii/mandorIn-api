@@ -178,6 +178,8 @@
  *                                 properties:
  *                                   date:
  *                                     type: string
+ *                                   is_extra_day:
+ *                                     type: boolean
  *                                   incomes:
  *                                     type: object
  *                                     properties:
@@ -317,6 +319,8 @@
  *                                       properties:
  *                                         _id:
  *                                           type: string
+ *                                         is_extra_day:
+ *                                           type: boolean
  *                                         daily_attendances:
  *                                           type: boolean
  *                                         daily_confirmation:
@@ -381,6 +385,8 @@
  *                     properties:
  *                                   _id:
  *                                     type: string
+ *                                   is_extra_day:
+ *                                     type: boolean  
  *                                   daily_attendances:
  *                                     type: boolean
  *                                   daily_confirmation:
@@ -478,6 +484,8 @@
  *                     properties:
  *                                   _id:
  *                                     type: string
+ *                                   is_extra_day:
+ *                                     type: boolean     
  *                                   daily_attendances:
  *                                     type: boolean
  *                                   daily_confirmation:

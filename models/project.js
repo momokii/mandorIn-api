@@ -2,7 +2,7 @@ const mongoose = require('mongoose')
 const Schema = mongoose.Schema
 
 
-// TODO (jika jadi) update properti untuk extra day
+
 const projectSchema = new Schema({
     nama : {
         type: String,
@@ -68,6 +68,10 @@ const projectSchema = new Schema({
         }
     ],
     daily_notes: [{
+        is_extra_day: {
+            type: Boolean,
+            default: false
+        },
         daily_attendances: {
             type: Boolean,
             //required: true,

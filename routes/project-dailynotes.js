@@ -8,7 +8,7 @@ const is_user = require('../middleware/role-checking').is_user
 const process_file = require('../middleware/file-upload')
 
 
-// * ------------------------------ PROJECT DAILY NOTES ------------------------------ * //
+// * ------------------------- PROJECT DAILY NOTES ------------------------- * //
 
 // ! ------- GET -------
 

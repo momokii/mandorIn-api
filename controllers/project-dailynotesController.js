@@ -1,6 +1,7 @@
 const statusCode = require('../utils/status-code').httpStatus_keyValue
-const format_date = require('date-fns/format')
+const update_weather_func = require('../utils/update-weather-daily').update_weather_daily
 const BaseDailyNotes = require('../models/daily-notes-struct')
+const format_date = require('date-fns/format')
 const date_formatter = require('date-fns')
 
 // * gunakan mongoose
@@ -11,6 +12,7 @@ const User = require('../models/user')
 const Weather = require('../models/weather')
 const axios = require("axios")
 const file_controller = require('../controllers/fileCloudController')
+const { update_weather_daily } = require('../utils/update-weather-daily')
 
 
 // * ------------------------------ FUNCTION ------------------------------ * //
@@ -110,6 +112,7 @@ function time_date_str(){
 // * -------------------------------- --GET-- ------------------------------ * //
 // ! ------------------------------------------- ------------------------------ * //
 
+// TODO filter ditambah untuk dapat misal hanya get untuk daily-notes yang termasuk extra-day
 exports.get_workers_daily_notes_summary = async (req, res, next) => {
     try{
         /*
@@ -150,7 +153,6 @@ exports.get_workers_daily_notes_summary = async (req, res, next) => {
         // * get daily notes to variabel
         let daily_notes = project.daily_notes
 
-        // ? filter from_date & to_date
         if(req.query.from_date || req.query.to_date){
             let start_index = 0
             let end_index = daily_notes.length
@@ -262,7 +264,7 @@ exports.get_workers_daily_notes_summary = async (req, res, next) => {
 
 
 
-
+// TODO tambah fiter untik tampulkan hanya extra day
 exports.get_daily_notes_finance_summary = async (req, res, next) => {
     try{
         /*
@@ -317,6 +319,7 @@ exports.get_daily_notes_finance_summary = async (req, res, next) => {
         for (let note of daily_notes){
             const daily_data = {
                 date : note.date,
+                is_extra_day: note.is_extra_day,
                 incomes : {
                     data: note.incomes.data,
                     total: note.incomes.total,
@@ -378,7 +381,6 @@ exports.get_daily_notes = async (req, res, next) => {
             throw_err("Data tidak ditemukan", statusCode['404_not_found'])
         }
 
-        //console.log(req.user_id.toString(), project.id_pm.toString())
         is_superadmin_or_admin_pm(req, project.id_pm.toString())
 
         // ! ------------------- ----------------- ---------------------- * //
@@ -501,7 +503,7 @@ exports.get_daily_notes = async (req, res, next) => {
 
 exports.workers_delete_post_notes = async (req, res, next) => {
     try{
-        // ! --------------------------- FILTER & AUTH USER --------------------------- * //
+        // ! --------------------- FILTER & AUTH USER --------------------- * //
         const workers = await User.findById(req.user_id)
         if(!workers){
             throw_err("Token Error, Akun tidak ditemukan", statusCode['404_not_found'])
@@ -526,7 +528,7 @@ exports.workers_delete_post_notes = async (req, res, next) => {
         if(user_id_project.toString() !== project._id.toString()){
             throw_err("User tidak terlibat dalam project terkait", statusCode['401_unauthorized'])
         }
-        // ! --------------------------- ----------------- --------------------------- * //
+        // ! --------------------- ----------------- --------------------- * //
 
         const today_date = today_date_str()
         const daily_notes = project.daily_notes
@@ -564,7 +566,7 @@ exports.workers_post_notes = async (req, res, next) => {
     try{
         const data = req.body.data
         const id_project = req.body.id_project
-        // ! --------------------------- FILTER & AUTH USER --------------------------- * //
+        // ! --------------------- FILTER & AUTH USER ---------------------- * //
         const workers = await User.findById(req.user_id)
         if(!workers){
             throw_err("Token Error, Akun tidak ditemukan", statusCode['404_not_found'])
@@ -589,7 +591,7 @@ exports.workers_post_notes = async (req, res, next) => {
         if(project_id.toString() !== project._id.toString()) {
             throw_err("User tidak terlibat dalam project terkait", statusCode['401_unauthorized'])
         }
-        // ! --------------------------- ----------------- --------------------------- * //
+        // ! ---------------------- ----------------- --------------------- * //
 
         // * hanya bisa mengisi daily notes dari data hari tersebut
         const today_date = new Date()
@@ -626,7 +628,6 @@ exports.workers_post_notes = async (req, res, next) => {
             }
         }
 
-        // * simpan worker note
         await project.save()
 
         res.status(statusCode['200_ok']).json({
@@ -649,7 +650,7 @@ exports.post_notes_tomorrow = async (req, res, next) => {
     try{
         const id_project = req.body.id_project
         const data_note = req.body.data
-        // ! --------------------------- FILTER & AUTH USER --------------------------- * //
+        // ! --------------------- FILTER & AUTH USER --------------------- * //
         const project = await Project.findById(id_project)
         if(!project){
             throw_err("Data tidak ditemukan", statusCode['404_not_found'])
@@ -668,7 +669,7 @@ exports.post_notes_tomorrow = async (req, res, next) => {
 
         // * jika konfirmasi harian sudah true tidak bisa post
         is_daily_confirmation_true(project, res)
-        // ! --------------------------- ----------------- --------------------------- * //
+        // ! --------------------- ----------------- --------------------- * //
 
         const date = new Date()
         const formatted_date = format_date(date, "yyyy-MM-dd")
@@ -702,7 +703,7 @@ exports.post_notes_tomorrow = async (req, res, next) => {
 exports.daily_attendances_confirmation = async (req, res, next) => {
     try{
         const id_project = req.body.id_project
-        // ! --------------------------- FILTER & AUTH USER --------------------------- * //
+        // ! ---------------------- FILTER & AUTH USER --------------------- * //
         const project = await Project.findById(id_project)
         if(!project){
             throw_err("Data tidak ditemukan", statusCode['404_not_found'])
@@ -715,7 +716,7 @@ exports.daily_attendances_confirmation = async (req, res, next) => {
 
         // * jika konfirmasi harian sudah true tidak bisa post
         is_daily_confirmation_true(project, res)
-        // ! --------------------------- ----------------- --------------------------- * //
+        // ! ---------------------- ----------------- ---------------------- * //
 
         const date_formatted = today_date_str()
 
@@ -829,8 +830,6 @@ exports.post_attendance_workers = async (req, res, next) => {
                                 const msg = "Absen gagal, Anda terlambat, maksimal absen adalah pukul " + date_formatter.format(th_attend_max_1h, "HH:mm:ss") + " dan Anda lakukan absen pukul " + user_attend_time
                                 throw_err(msg, statusCode['401_unauthorized'])
                             }
-
-                            console.log(th_attend_min_1h, th_attend_max_1h, work_start_hour, user_time)
 
                             worker.attendances_time = user_attend_time
                             worker.attendances = true
@@ -1010,7 +1009,7 @@ exports.post_incomes_expenses = async (req, res, next) => {
         const data_post = req.body.data
         const id_project = req.body.id_project
 
-        // ! --------------------------- FILTER & AUTH USER --------------------------- * //
+        // ! ---------------------- FILTER & AUTH USER ---------------------- * //
         const project = await Project.findById(id_project)
         if(!project) {
             throw_err("Data tidak ditemukan", statusCode['404_not_found'])
@@ -1024,7 +1023,7 @@ exports.post_incomes_expenses = async (req, res, next) => {
 
         // ! filter tambahan--> cek daily confirmation sudah TRUE belum
         is_daily_confirmation_true(project, res)
-        // ! --------------------------- ----------------- --------------------------- * //
+        // ! ---------------------- ----------------- --------------------- * //
 
         const formatted_date = today_date_str()
 
@@ -1084,12 +1083,12 @@ exports.post_incomes_expenses = async (req, res, next) => {
 
 
 
-// TODO update dengan tambah konsep extra-day
+
 exports.post_dailynotes = async (req, res, next) => {
     try{
         const id_project = req.body.id_project
 
-        // ! --------------------------- FILTER & AUTH USER --------------------------- * //
+        // ! --------------------- FILTER & AUTH USER --------------------- * //
         const project = await Project.findById(id_project)
         if(!project){
             throw_err("Data tidak ditemukan", statusCode['404_not_found'])
@@ -1100,9 +1099,6 @@ exports.post_dailynotes = async (req, res, next) => {
 
         // * kalau project sudah DONE maka tidak usah buat daily nots namun tidak error
         is_project_done(project, "Project sudah selesai, tidak bisa buat daily notes baru", res)
-
-        // * jika konfirmasi harian sudah true tidak bisa post
-        is_daily_confirmation_true(project, res)
 
         const formatted_date = today_date_str()
 
@@ -1116,7 +1112,7 @@ exports.post_dailynotes = async (req, res, next) => {
             }
         }
 
-        // ! --------------------------- ----------------- --------------------------- * //
+        // ! --------------------- ----------------- --------------------- * //
         // * pastikan untuk daily-notes hari sebelumnya set konfirmasi hari dan absensi
         if(project.daily_notes.length >= 1){
             // * cek jika jika baru inisiasi project maka daily-notes bisa saja baru 1 maka tidak ada hari kemarin dan bahkan bisa belum ada daily-notes
@@ -1136,42 +1132,21 @@ exports.post_dailynotes = async (req, res, next) => {
             new_daily_notes.attendances.push(data_attendance)
         })
 
-        // ? ------------------- update Daily Weather Prediction -------------------
-
-        const weather = await Weather.findOne({
-            id_project : project._id.toString()
-        })
-
-        const LONG = project.long
-        const LAT = project.lat
-        const api_url = "https://api.open-meteo.com/v1/forecast?latitude=" + LONG.toString() +  "&longitude=" + LAT.toString() + "&hourly=temperature_2m,precipitation_probability&timezone=Asia%2FBangkok&forecast_days=1"
-        const response = await axios.get(api_url)
-        if(response.status === 200){
-            const response_data = response.data // response asli
-
-            // * format untuk dapatkan date dari response api
-            let date_forecast = response_data.hourly.time[0]
-            const indexT = date_forecast.indexOf("T")
-
-            // * tidak perlu format, tetap berikan number (untuk prep dan temperature) dan diformat di FE saja
-            const hourly_str = response_data.hourly.time.map(data => {
-                const index_T = data.indexOf("T")
-                return data.substring(index_T + 1)
-            })
-
-            // * format response get data ke model weather
-            weather.timezone = response_data.timezone // * sesuaikan sendiri
-            weather.elevation = response_data.elevation // * berapa mdpl long lat terkait
-            weather.temp_forecast = response_data.hourly.temperature_2m // * data asli 1 hari
-            weather.precipitation_probability = response_data.hourly.precipitation_probability
-            weather.hourly = hourly_str
-            weather.date = date_forecast.substring(0, indexT)
+        // * if EXTRA DAY
+        const today_code = (new Date()).getDay()
+        if((today_code < project.id_day_work_start) || (today_code > project.id_day_work_last)){
+            new_daily_notes.is_extra_day = true
         }
-        // ? --------------------------------------------------------------------
+
+        //* update weather
+        const weather = await update_weather_daily(project)
+        if(!weather.status){
+            throw_err("Gagal add daily notes", statusCode['500_internal_server_error'])
+        }
 
         // * tambah data daily notes baru ke project
         project.daily_notes.push(new_daily_notes)
-        await weather.save()
+        await weather.data.save()
         await project.save()
 
         res.status(statusCode['200_ok']).json({
