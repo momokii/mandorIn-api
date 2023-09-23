@@ -1,5 +1,5 @@
 const statusCode = require('../utils/status-code').httpStatus_keyValue
-const update_weather_func = require('../utils/update-weather-daily').update_weather_daily
+const {update_weather_daily} = require('../utils/update-weather-daily')
 const BaseDailyNotes = require('../models/daily-notes-struct')
 const format_date = require('date-fns/format')
 const date_formatter = require('date-fns')
@@ -10,9 +10,8 @@ const Workhour = require('../models/workhour')
 const Day = require('../models/day')
 const User = require('../models/user')
 const Weather = require('../models/weather')
-const axios = require("axios")
 const file_controller = require('../controllers/fileCloudController')
-const { update_weather_daily } = require('../utils/update-weather-daily')
+
 
 
 // * ------------------------------ FUNCTION ------------------------------ * //
@@ -29,7 +28,6 @@ function is_superadmin_or_admin_pm(req, pm_id) {
         throw_err("Akun tidak punya akses", statusCode['401_unauthorized'])
     }
 }
-
 
 
 function is_daily_confirmation_true(project, res){
@@ -264,7 +262,7 @@ exports.get_workers_daily_notes_summary = async (req, res, next) => {
 
 
 
-// TODO tambah fiter untik tampulkan hanya extra day
+// TODO tambah fiter untuk tampulkan hanya extra day
 exports.get_daily_notes_finance_summary = async (req, res, next) => {
     try{
         /*
@@ -274,7 +272,7 @@ exports.get_daily_notes_finance_summary = async (req, res, next) => {
             * dapatkan summary dihari tertentu (?) -> sebenearnya juga busa gunakan langsung dari get daily notes saja (tidak bisa pilih 1 hari? atau nanti bisa gunakan gunakan daily-notes saja)
             * dapatkan summary dari hari x - x + n -> data hari bisa dibatasi untuk pemilihannya dengan nanti di FE dengan hanya bisa pilih dari tanggal tersedia dari smua daily nots yang ada di project terkait (V)
          */
-        // ! --------------------------- FILTER & AUTH USER --------------------------- * //
+        // ! --------------------- FILTER & AUTH USER --------------------- * //
         const id_project = req.query.id_project
         const project = await Project.findById(id_project)
         if(!project){
@@ -283,7 +281,7 @@ exports.get_daily_notes_finance_summary = async (req, res, next) => {
 
         is_superadmin_or_admin_pm(req, req.user_id.toString())
 
-        // ! --------------------------- ----------------- --------------------------- * //
+        // ! --------------------- ----------------- ---------------------- * //
 
         // * get seluruh data keuangan dan ada data
         let daily_notes = project.daily_notes
@@ -316,27 +314,62 @@ exports.get_daily_notes_finance_summary = async (req, res, next) => {
         }
         // * --------------------------
 
+        // * filter only EXTRA day -> boolean
+        let is_extra_day = req.query.is_extra_day
+
         for (let note of daily_notes){
-            const daily_data = {
-                date : note.date,
-                is_extra_day: note.is_extra_day,
-                incomes : {
-                    data: note.incomes.data,
-                    total: note.incomes.total,
-                    file: note.incomes.file
-                },
-                expenses : {
-                    data: note.expenses.data,
-                    total: note.expenses.total,
-                    file: note.expenses.file
+            if(is_extra_day === 'true'){
+                if(note.is_extra_day === true){
+                    const daily_data = {
+                        date : note.date,
+                        is_extra_day: note.is_extra_day,
+                        incomes : {
+                            data: note.incomes.data,
+                            total: note.incomes.total,
+                            file: note.incomes.file
+                        },
+                        expenses : {
+                            data: note.expenses.data,
+                            total: note.expenses.total,
+                            file: note.expenses.file
+                        }
+                    }
+                    all_incomes_expenses.push(daily_data)
+                    total_incomes = total_incomes + note.incomes.total
+                    total_expenses = total_expenses + note.expenses.total
                 }
-            }
-            all_incomes_expenses.push(daily_data)
-            total_incomes = total_incomes + note.incomes.total
-            total_expenses = total_expenses + note.expenses.total
+            } else {
+                const daily_data = {
+                    date : note.date,
+                    is_extra_day: note.is_extra_day,
+                    incomes : {
+                        data: note.incomes.data,
+                        total: note.incomes.total,
+                        file: note.incomes.file
+                    },
+                    expenses : {
+                        data: note.expenses.data,
+                        total: note.expenses.total,
+                        file: note.expenses.file
+                    }
+                }
+                all_incomes_expenses.push(daily_data)
+                total_incomes = total_incomes + note.incomes.total
+                total_expenses = total_expenses + note.expenses.total
+            } 
         }
 
         total = total_incomes - total_expenses
+
+        if(is_extra_day === 'true' ){
+            if(all_incomes_expenses.length > 0){
+                start_date = all_incomes_expenses[0].date 
+                end_date = all_incomes_expenses[all_incomes_expenses.length - 1].date
+            } else {
+                start_date = null 
+                end_date = null
+            }
+        }
 
         const data = {
             start_date: start_date,
@@ -877,7 +910,7 @@ exports.daily_confirmation_done = exports.template = async (req, res, next) => {
             * SUPERADMIN juga hanya bisa BATALKAN
          */
 
-        // ! --------------------------- FILTER & AUTH USER --------------------------- * //
+        // ! --------------------- FILTER & AUTH USER --------------------- * //
         const project = await Project.findById(req.body.id_project)
         if(!project){
             throw_err("Data tidak ditemukan", statusCode['404_not_found'])
@@ -888,7 +921,7 @@ exports.daily_confirmation_done = exports.template = async (req, res, next) => {
 
         // * kalau project sudah DONE maka tidak bisa post
         is_project_done(project, "Project sudah selesai, tidak bisa jalankan proses", res)
-        // ! --------------------------- ----------------- --------------------------- * //
+        // ! --------------------- ----------------- --------------------- * //
 
         // * cari daily notes hari ini
         const today_date = new Date()
@@ -935,7 +968,7 @@ exports.delete_incomes_expenses = async (req, res, next) => {
         * untuk sekarang hanya bisa digunakan pada hari terkait dan sbelum konfirmasi hari
         */
 
-        // ! --------------------------- FILTER & AUTH USER --------------------------- * //
+        // ! --------------------- FILTER & AUTH USER ---------------------- * //
         const project = await Project.findById(req.body.id_project)
         if(!project){
             throw_err("Data tidak ditemukan", statusCode['404_not_found'])
@@ -947,7 +980,7 @@ exports.delete_incomes_expenses = async (req, res, next) => {
 
         is_project_done(project, "Project sudah selesai, tidak bisa jalankan proses", res)
 
-        // ! --------------------------- ----------------- --------------------------- * //
+        // ! -------------------- ----------------- -------------------- * //
         const ket = req.params.finance 
 
         const today_date = today_date_str()

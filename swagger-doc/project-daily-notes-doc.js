@@ -151,6 +151,9 @@
  *       - in: query
  *         name: to_date
  *         description: Cari summary sampai tanggal berapa
+ *       - in: query
+ *         name: is_extra_day
+ *         description: Cari hanya data dari note extra day, bernilai benar set dengan "true"     
  *
  *     responses:
  *       '200':
