@@ -5,6 +5,7 @@ const format_date = require('date-fns/format')
 const date_formatter = require('date-fns')
 const cron = require('node-cron')
 const cron_func = require('../utils/cron-function')
+const mongoose = require('mongoose')
 
 // * gunakan mongoose
 const Project = require('../models/project')
@@ -22,7 +23,6 @@ cron.schedule('*/1 * * * *', async () => {
     await cron_func.update_daily_notes_projects_cron_func()
 
 })
-
 
 // * ------------------------------ FUNCTION ------------------------------ * //
 
@@ -120,7 +120,7 @@ function time_date_str(){
 // * -------------------------------- --GET-- ------------------------------ * //
 // ! ------------------------------------------- ------------------------------ * //
 
-// TODO filter ditambah untuk dapat misal hanya get untuk daily-notes yang termasuk extra-day
+
 exports.get_workers_daily_notes_summary = async (req, res, next) => {
     try{
         /*
@@ -1145,6 +1145,10 @@ exports.post_incomes_expenses = async (req, res, next) => {
 
 
 exports.post_dailynotes = async (req, res, next) => {
+
+    const session = await mongoose.startSession()
+    session.startTransaction()
+    
     try{
         const id_project = req.body.id_project
 
@@ -1199,6 +1203,9 @@ exports.post_dailynotes = async (req, res, next) => {
             new_daily_notes.attendances.push(data_attendance)
         })
 
+        project.daily_notes.push(new_daily_notes) // * tambah data daily notes baru ke project
+        
+
         // * if EXTRA DAY
         const today_code = (new Date()).getDay()
         if((today_code < project.id_day_work_start) || (today_code > project.id_day_work_last)){
@@ -1211,10 +1218,11 @@ exports.post_dailynotes = async (req, res, next) => {
             throw_err("Gagal add daily notes", statusCode['500_internal_server_error'])
         }
 
-        // * tambah data daily notes baru ke project
-        project.daily_notes.push(new_daily_notes)
-        await weather.data.save()
-        await project.save()
+        await project.save({session})
+        await weather.data.save({session})
+
+        await session.commitTransaction()
+        session.endSession()
 
         res.status(statusCode['200_ok']).json({
             errors: false,
@@ -1222,6 +1230,7 @@ exports.post_dailynotes = async (req, res, next) => {
         })
 
     } catch (e) {
+        await session.abortTransaction()
         if(!e.statusCode){
             e.statusCode = statusCode['500_internal_server_error']
         }

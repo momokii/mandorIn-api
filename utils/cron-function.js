@@ -1,6 +1,7 @@
 const BaseDailyNotes = require('../models/daily-notes-struct')
 const date_formatter = require('date-fns')
 const {update_weather_daily} = require('../utils/update-weather-daily')
+const mongoose = require('mongoose')
 
 const Project = require('../models/project')
 
@@ -19,6 +20,10 @@ function today_date_str(){
 }
 
 const post_daily_notes_cron = async (id_project) => {
+
+    const session = await mongoose.startSession()
+    session.startTransaction()
+
     try{
 
         // ! --------------------- FILTER --------------------- * //
@@ -68,12 +73,18 @@ const post_daily_notes_cron = async (id_project) => {
         }
 
         // * save data
-        await weather.data.save()
-        await project.save()
+        await project.save({session})
+        await weather.data.save({session})
+        
+
+        // * commit transaction and end session
+        await session.commitTransaction()
+        session.endSession()
 
         return true
 
     } catch (e){
+        await session.abortTransaction()
         console.log(e.message)
         return false
     }

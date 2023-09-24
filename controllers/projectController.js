@@ -7,6 +7,7 @@ const statusCode = require('../utils/status-code').httpStatus_keyValue
 const format_date = require('date-fns/format')
 const BaseDailyNotes = require('../models/daily-notes-struct')
 const date_formatter = require('date-fns')
+const mongoose = require('mongoose')
 
 // * gunakan mongoose
 const Project = require('../models/project')
@@ -107,13 +108,13 @@ exports.get_all_projects_history = async(req, res, next) => {
             } else {
                 // * jika workers / role = 3
                 total_data = await Project.countDocuments({
-                    name : { $regex : search.trim(), $options : "i" },
+                    name : {$regex : search.trim(), $options : "i"},
                     workers: {$in : [req.user_id.toString()]},
                     on_progress: false
                 })
 
                 project_history = await Project.find({
-                    name : { $regex : search.trim(), $options : "i" },
+                    name : {$regex : search.trim(), $options : "i"},
                     workers: {$in : [req.user_id.toString()]},
                     on_progress: false
                 }).populate({
@@ -125,12 +126,12 @@ exports.get_all_projects_history = async(req, res, next) => {
         } else {
             // * jika superadmin / role == 1
             total_data = await Project.countDocuments({
-                name : { $regex : search.trim(), $options : "i" },
+                name : {$regex : search.trim(), $options : "i"},
                 on_progress: false
             })
 
             project_history = await Project.find({
-                name : { $regex : search.trim(), $options : "i" },
+                name : {$regex : search.trim(), $options : "i"},
                 on_progress: false
             })
                 .populate({
@@ -224,7 +225,7 @@ exports.get_one_project = async (req, res, next) => {
         const total_free_day_now = total_length_day_start_now - total_work_day_now
         // * count extra_day
         let total_extra_day = 0
-        for (note of project.daily_notes){
+        for (let note of project.daily_notes){
             if(note.is_extra_day === true){
                 total_extra_day = total_extra_day + 1
             }
@@ -275,11 +276,11 @@ exports.get_all_projects = async (req, res, next) => {
             if(req.role === 2){
                 total_data = await Project.countDocuments({
                     id_pm : req.user_id,
-                    nama : { $regex : search.trim() , $options: 'i'}
+                    nama : {$regex : search.trim() , $options: 'i'}
                 })
                 all_project = await Project.find({
                     id_pm : req.user_id,
-                    nama : { $regex : search.trim(), $options: 'i'}
+                    nama : {$regex : search.trim(), $options: 'i'}
                 }).populate({
                     path : "id_workhour id_pm id_day_work_start id_day_work_last"
                 })
@@ -343,6 +344,10 @@ exports.get_all_projects = async (req, res, next) => {
 
 
 exports.create_project = async (req, res, next) => {
+
+    const session = await mongoose.startSession()
+    session.startTransaction()
+
     try{
         const nama_project = req.body.nama
         const deskripsi = req.body.deskripsi
@@ -370,7 +375,7 @@ exports.create_project = async (req, res, next) => {
             id_pm: id_pm
         }
 
-        // ! --------------------------- FILTER & AUTH USER --------------------------- * //
+        // ! --------------------- FILTER & AUTH USER --------------------- * //
 
         // * cek jika id_day_work_start atau id_day_work_last <1 atau >8
         if((id_day_mulai < 1 || id_day_mulai > 7) || (id_day_selesai < 1 || id_day_selesai > 7)){
@@ -404,7 +409,7 @@ exports.create_project = async (req, res, next) => {
             throw_err("Project dengan data sama persis sudah ada, coba cek data input kembali", statusCode['400_bad_request'])
         }
 
-        // ! --------------------------- ----------------- --------------------------- * //
+        // ! --------------------- ----------------- --------------------- * //
 
         // * buat dahulu namun belum disimpan
         const new_project = new Project({
@@ -414,7 +419,7 @@ exports.create_project = async (req, res, next) => {
 
         // * kemudian setelah buat project baru -> cek dahulu apakah user diinputkan sudah dilibatkan dalam project lain atau belum dan sedang aktif
         const user_project = req.body.id_users
-        for(id_user of user_project){
+        for(let id_user of user_project){
             const user = await User.findById(id_user)
             if(user && (user.id_role === 3) && (user.id_project === null)){
 
@@ -439,9 +444,12 @@ exports.create_project = async (req, res, next) => {
 
         // * kemudian sebelum save project baru juga ubah/ tambah data project yang dikerjakan oleh pm
         user_pm.projects.push(new_project._id)
-        await new_project.save()
-        await user_pm.save()
-        await new_weather.save()
+        await new_project.save({session})
+        await user_pm.save({session})
+        await new_weather.save({session})
+
+        await session.commitTransaction()
+        session.endSession()
 
         res.status(statusCode['200_ok']).json({
             errors: false,
@@ -449,6 +457,7 @@ exports.create_project = async (req, res, next) => {
         })
 
     } catch (e) {
+        await session.abortTransaction()
         if(!e.statusCode){
             e.statusCode = statusCode['500_internal_server_error']
         }

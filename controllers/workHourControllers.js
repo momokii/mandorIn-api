@@ -2,6 +2,7 @@
 const statusCode = require('../utils/status-code').httpStatus_keyValue
 //* change using nosql database
 const WorkHour = require('../models/workhour')
+const Project = require('../models/project')
 
 // * ------------------------------ FUNCTION ------------------------------ * //
 
@@ -111,7 +112,7 @@ exports.create_workhour = async (req, res, next) => {
             throw_err("Jadwal yang diinputkan sudah ada dalam sistem, proses tambah gagal", statusCode['400_bad_request'])
         }
 
-        newWorkhour = new WorkHour ({
+        let newWorkhour = new WorkHour ({
             jam_masuk: mulai,
             jam_selesai: selesai,
             jam_istirahat_mulai: istirahat_mulai,
@@ -192,11 +193,24 @@ exports.delete_workhour = async (req, res, next) => {
             throw_err("Data tidak ditemukan", statusCode['404_not_found'])
         }
 
-        // * ------------------ CATATAN ------------------
+        const project_check = await Project.find({
+            id_workhour: req.body.id_workhour
+        })
 
-        // *! mungkin nanti dibuat ketika sedang digunakan dalam sebuah proyek maka data workhour terkait tidak bisa dihapus
+        let is_used = false
 
-        // * ------------------ ------- ------------------
+        if(project_check){
+            for (let project of project_check){
+                if(project.on_progress){
+                    is_used = true
+                    break
+                }
+            }
+
+            if(is_used){
+                throw_err("Workhour sedang digunakan dalam project aktif, tidak bisa hapus", statusCode['401_unauthorized'])
+            }
+        }
 
         await WorkHour.findByIdAndDelete(req.body.id_workhour)
 
