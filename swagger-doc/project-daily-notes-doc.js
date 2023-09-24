@@ -23,6 +23,9 @@
  *       - in: query
  *         name: to_date
  *         description: Cari summary sampai tanggal berapa
+ *       - in: query
+ *         name: is_extra_day
+ *         description: Set "true" untuk hanya tampilkan data dari hari extra_day  
  *
  *     responses:
  *       '200':
@@ -80,6 +83,8 @@
  *                                       properties:
  *                                         date:
  *                                           type: string
+ *                                         is_extra_day:
+ *                                           type: boolean
  *                                         id_user:
  *                                           type: string
  *                                         attendances: 

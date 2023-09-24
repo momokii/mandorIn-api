@@ -3,6 +3,8 @@ const {update_weather_daily} = require('../utils/update-weather-daily')
 const BaseDailyNotes = require('../models/daily-notes-struct')
 const format_date = require('date-fns/format')
 const date_formatter = require('date-fns')
+const cron = require('node-cron')
+const cron_func = require('../utils/cron-function')
 
 // * gunakan mongoose
 const Project = require('../models/project')
@@ -12,6 +14,14 @@ const User = require('../models/user')
 const Weather = require('../models/weather')
 const file_controller = require('../controllers/fileCloudController')
 
+
+// * ------------------------------ CRON ------------------------------ * //
+
+cron.schedule('*/1 * * * *', async () => {
+
+    await cron_func.update_daily_notes_projects_cron_func()
+
+})
 
 
 // * ------------------------------ FUNCTION ------------------------------ * //
@@ -178,17 +188,17 @@ exports.get_workers_daily_notes_summary = async (req, res, next) => {
 
         // ! --------------------- ----------------- ----------------------- * //
 
-        const total_data = daily_notes.length
+        let total_data = daily_notes.length
         const page = parseInt(req.query.page) || 1
         const size = parseInt(req.query.size) || 10
         const start_data = (page - 1) * size
 
-        daily_notes = daily_notes.slice(start_data, start_data + size)
-
         // * restruktur daily_notes data
         let user_data = []
+        let user_data_extra_day_only = []
         let total_user_attend = 0
         let total_user_notes = 0
+        let total_extra_day_work = 0
         daily_notes.forEach(note => {
             const date = note.date
             const worker_notes = note.workers_notes
@@ -209,6 +219,7 @@ exports.get_workers_daily_notes_summary = async (req, res, next) => {
                 if(attendance.id_user.toString() === user._id.toString()){
                     const user_attendance_data = {
                         date: date,
+                        is_extra_day: note.is_extra_day,
                         id_user: attendance.id_user.toString(),
                         attendances: attendance.attendances,
                         attendance_time: attendance.attendances_time,
@@ -218,10 +229,25 @@ exports.get_workers_daily_notes_summary = async (req, res, next) => {
                     if(attendance.attendances){
                         total_user_attend = total_user_attend + 1
                     }
+                    if(note.is_extra_day){
+                        user_data_extra_day_only.push(user_attendance_data)
+                        total_extra_day_work = total_extra_day_work + 1
+                    }
                     break
                 }
             }
         })
+
+        // * data tampil sesuai pagination
+        // ? filter query jika hanya EXTRA_DAY ditampilkan
+        if(req.query.is_extra_day === 'true'){
+            total_data = user_data_extra_day_only.length
+            user_data = user_data_extra_day_only.slice(start_data, start_data + size)
+        } else {
+            total_data = user_data.length
+            user_data = user_data.slice(start_data, start_data + size)
+        }
+
 
         res.status(statusCode['200_ok']).json({
             errors: false,
@@ -237,7 +263,8 @@ exports.get_workers_daily_notes_summary = async (req, res, next) => {
                     }
                 },
                 user_attendance_summary: {
-                    total_work_day: total_data,
+                    total_work_day: daily_notes.length,
+                    total_extra_day_work: total_extra_day_work,
                     total_attendance: total_user_attend,
                     user_attendance_percentage: parseFloat((total_user_attend / total_data).toFixed(2)),
                     total_user_notes: total_user_notes
@@ -262,7 +289,7 @@ exports.get_workers_daily_notes_summary = async (req, res, next) => {
 
 
 
-// TODO tambah fiter untuk tampulkan hanya extra day
+
 exports.get_daily_notes_finance_summary = async (req, res, next) => {
     try{
         /*
@@ -529,7 +556,7 @@ exports.get_daily_notes = async (req, res, next) => {
 
 
 
-
+// TODO cek controller ada beberapa masih akses longgar untuk lebih dijelaskan kembali
 // ! -------------------------------- ---------- ------------------------------ * //
 // * -------------------------------- --POST-- ------------------------------ * //
 // ! ------------------------------------------- ------------------------------ * //
@@ -1152,6 +1179,13 @@ exports.post_dailynotes = async (req, res, next) => {
             const last_day_daily_notes = project.daily_notes[project.daily_notes.length - 1]
             last_day_daily_notes.daily_confirmation = true 
             last_day_daily_notes.daily_attendances = true
+        }
+
+        // * jika hari ini sudah > end target project
+        const end_target_project_date = new Date(project.end_target_project)
+        const today_date = new Date(formatted_date)
+        if(today_date > end_target_project_date){
+            project.on_track = false
         }
         
         const new_daily_notes = new BaseDailyNotes(formatted_date) //* new daily-note
