@@ -17,7 +17,7 @@ router.get('/', is_auth, //is_superadmin,
 
 router.post('/', is_auth, is_superadmin, projectController.create_project)
 
-router.patch('/done', is_auth, //is_superadmin,
+router.patch('/done', is_auth, is_superadmin,
     projectController.done_project)
 
 router.patch('/', is_auth, is_superadmin, projectController.edit_project)

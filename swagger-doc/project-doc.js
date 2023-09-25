@@ -403,7 +403,7 @@
  * @swagger
  * /projects:
  *   post:
- *     summary: Post project baru
+ *     summary: Post project baru - superadmin only
  *     tags: [Project]
  *     security:
  *       - bearerAuth: []
@@ -505,7 +505,7 @@
  * @swagger
  * /projects/done:
  *   patch:
- *     summary: Ubah status proyek menjadi telah selesai
+ *     summary: Ubah status proyek menjadi telah selesai - superadmin only
  *     tags: [Project]
  *     security:
  *       - bearerAuth: []
@@ -530,7 +530,7 @@
  *                 errors:
  *                   example: false
  *                 message:
- *                   example: Berhasil ubah status proyek menjadi selesai
+ *                   example: string
  *
  *       '401':
  *         description: Akun tidak punya akses
@@ -580,7 +580,7 @@
  * @swagger
  * /projects:
  *   patch:
- *     summary: Edit informasi project
+ *     summary: Edit informasi project - superadmin only
  *     tags: [Project]
  *     security:
  *       - bearerAuth: []
@@ -661,7 +661,7 @@
  * @swagger
  * /projects:
  *   delete:
- *     summary: Delete satu data project (NOT DEVELOPED)
+ *     summary: Delete satu data project (NOT DEVELOPED) - superadmin anly
  *     tags: [Project]
  *     security:
  *       - bearerAuth: []

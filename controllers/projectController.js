@@ -4,8 +4,6 @@
 //const User = require('../models/users')
 //const ProjectWorker = require('../models/project-worker')
 const statusCode = require('../utils/status-code').httpStatus_keyValue
-const format_date = require('date-fns/format')
-const BaseDailyNotes = require('../models/daily-notes-struct')
 const date_formatter = require('date-fns')
 const mongoose = require('mongoose')
 
@@ -378,7 +376,7 @@ exports.create_project = async (req, res, next) => {
         // ! --------------------- FILTER & AUTH USER --------------------- * //
 
         // * cek jika id_day_work_start atau id_day_work_last <1 atau >8
-        if((id_day_mulai < 1 || id_day_mulai > 7) || (id_day_selesai < 1 || id_day_selesai > 7)){
+        if((id_day_mulai < 0 || id_day_mulai > 6) || (id_day_selesai < 0 || id_day_selesai > 6)){
             throw_err("Kode hari tidak sesuai", statusCode['400_bad_request'])
         }
 
@@ -387,7 +385,7 @@ exports.create_project = async (req, res, next) => {
             throw_err("Waktu target pengerjaan lebih kecil dari awal pengerjaan", statusCode['400_bad_request'])
         }
         const today = new Date()
-        today.setHours(7, 0, 0, 0) // * set hours=7 -> untuk agar waktu dapat sama dengan waktu indonesia
+        today.setHours(0, 0, 0, 0)
         if(start <= today){
             throw_err("Minimal set tanggal start proyek adalah h+1 dari hari ini", statusCode['400_bad_request'])
         }
@@ -434,13 +432,19 @@ exports.create_project = async (req, res, next) => {
             }
         }
 
-        // ? ------------------ buat Daily Weather Document sebelum save project baru ------------------
+        // * jika semua pekerja sedang aktif
+        if(new_project.workers.length < 1){
+            throw_err("Harus inputkan setidaknya 1 pekerja sedang tidak terlibat project apapun", statusCode['401_unauthorized'])
+        }
+
+
+        // ? -------- buat Daily Weather Document sebelum save project baru --------
 
         const new_weather = new Weather({
             id_project : new_project._id.toString()
         })
 
-        // ? ---------------------- --------------------------------------------- ----------------------
+        // ? ----------- --------------------------------------------- ------------
 
         // * kemudian sebelum save project baru juga ubah/ tambah data project yang dikerjakan oleh pm
         user_pm.projects.push(new_project._id)
@@ -470,45 +474,50 @@ exports.create_project = async (req, res, next) => {
 
 
 exports.done_project = async (req, res, next) => {
+
+    const session = await mongoose.startSession()
+    session.startTransaction()
+
     try{
-        /*
-            * sekarang dibuat -> hanya bisa dilakukan/ akses oleh PM/ super admin
-         */
 
         const project = await Project.findById(req.body.id_project)
         if(!project){
             throw_err("Data tidak ditemukan", statusCode['404_not_found'])
         }
 
-        /*
-            * -------------------------------------------------------------------
-            * sekarang dibuat -> hanya bisa dilakukan/ akses oleh PM/SuperAdmin
-            * -------------------------------------------------------------------
-         */
-        if(req.role !== 1 && req.user_id.toString() !== project.id_pm.toString()){
-            throw_err('Akun tidak punya akses', statusCode['401_unauthorized'])
+        if(project.on_progress === false){
+            return res.status(statusCode['200_ok']).json({
+                errors: false,
+                message: 'Project sudah diselesaikan sebelumnya, tidak bisa kembalikan jadi aktif kembali'
+            })
         }
 
-        // project.on_progress = false // ! versi benar
-        // * ------------------- ------------------- ------------------- -------------------
-        // * dev version (jika di post lagi maka akan kembalikan misal dari true -> false -> true)
-        // * ------------------- ------------------- ------------------- -------------------
-        if(project.on_progress === true){
-            project.on_progress = false
-        } else {
-            project.on_progress = true
-        }
-        /*
-            * catatan
-            * mungkin nantinya ketika project selesai bisa berikan tambahan properti -> misal ada catatan selama project dikerjakan dll.
-            *
-            ! juga ketika project selesai maka nanti harusnya
-            * unlink data id project di workers/user/ role = 3
-            * hapus data pm pada array di pm/user/role = 2
-         */
-        // * ----------------------
+        project.on_progress = false // ! versi benar
 
-        await project.save()
+        // * unlink pm
+        const user_pm = await User.findById(project.id_pm) 
+        if(!user_pm){
+            throw_err("Data project manager tidak ditemukan, proses error", statusCode['401_unauthorized'])
+        }
+        user_pm.projects = user_pm.projects.filter(id_project => {
+            if(id_project.toString() !== project._id.toString()){
+                return id_project
+            }
+        })
+
+        // * unlink workers
+        for (let worker_id of project.workers){
+            const user_worker = await User.findById(worker_id) 
+
+            user_worker.id_project = null 
+            await user_worker.save({session})
+        }
+
+        await user_pm.save({session})
+        await project.save({session})
+
+        await session.commitTransaction()
+        session.endSession()
 
         res.status(statusCode['200_ok']).json({
             errors: false,
@@ -516,6 +525,7 @@ exports.done_project = async (req, res, next) => {
         })
 
     } catch (e) {
+        await session.abortTransaction()
         if(!e.statusCode){
             e.statusCode = statusCode['500_internal_server_error']
         }

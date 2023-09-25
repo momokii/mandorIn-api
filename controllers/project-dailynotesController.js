@@ -9,8 +9,6 @@ const mongoose = require('mongoose')
 
 // * gunakan mongoose
 const Project = require('../models/project')
-const Workhour = require('../models/workhour') 
-const Day = require('../models/day')
 const User = require('../models/user')
 const Weather = require('../models/weather')
 const file_controller = require('../controllers/fileCloudController')
@@ -762,6 +760,11 @@ exports.post_notes_tomorrow = async (req, res, next) => {
 
 exports.daily_attendances_confirmation = async (req, res, next) => {
     try{
+        /*
+            * catatan
+            * untuk sekarang ADMIN hanya bisa konfirmasi
+            * SUPERADMIN juga hanya bisa BATALKAN
+         */
         const id_project = req.body.id_project
         // ! ---------------------- FILTER & AUTH USER --------------------- * //
         const project = await Project.findById(id_project)
@@ -936,7 +939,6 @@ exports.daily_confirmation_done = exports.template = async (req, res, next) => {
             * untuk sekarang ADMIN hanya bisa konfirmasi
             * SUPERADMIN juga hanya bisa BATALKAN
          */
-
         // ! --------------------- FILTER & AUTH USER --------------------- * //
         const project = await Project.findById(req.body.id_project)
         if(!project){
@@ -991,17 +993,11 @@ exports.daily_confirmation_done = exports.template = async (req, res, next) => {
 
 exports.delete_incomes_expenses = async (req, res, next) => {
     try{
-        /*
-        * untuk sekarang hanya bisa digunakan pada hari terkait dan sbelum konfirmasi hari
-        */
-
         // ! --------------------- FILTER & AUTH USER ---------------------- * //
         const project = await Project.findById(req.body.id_project)
         if(!project){
             throw_err("Data tidak ditemukan", statusCode['404_not_found'])
         }
-
-        is_superadmin_or_admin_pm(req, project.id_pm)
 
         is_daily_confirmation_true(project, res)
 
@@ -1074,9 +1070,6 @@ exports.post_incomes_expenses = async (req, res, next) => {
         if(!project) {
             throw_err("Data tidak ditemukan", statusCode['404_not_found'])
         }
-
-        // * cek jika bukan super admin atau admin dari project terkait
-        is_superadmin_or_admin_pm(req, project.id_pm)
 
         // * kalau project sudah DONE maka tidak bisa post
         is_project_done(project, "Project sudah selesai, tidak bisa post finance data", res)

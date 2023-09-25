@@ -3,7 +3,7 @@
  * @swagger
  * /projects/daily-notes/workers:
  *   get:
- *     summary: Get data absensi dan catatan user workers pada sebuah project
+ *     summary: Get data absensi dan catatan user workers pada sebuah project - workers only
  *     tags: [Project-DailyNotes]
  *     security:
  *       - bearerAuth: []
@@ -603,7 +603,7 @@
  * @swagger
  * /projects/daily-notes/workers/delete:
  *   post:
- *     summary: Hapus data daily notes user
+ *     summary: Hapus data daily notes user - workers only
  *     tags: [Project-DailyNotes]
  *     security:
  *       - bearerAuth: []
@@ -676,7 +676,7 @@
  * @swagger
  * /projects/daily-notes/workers:
  *   post:
- *     summary: Post catatan harian oleh workers
+ *     summary: Post catatan harian oleh workers - workers only
  *     tags: [Project-DailyNotes]
  *     security:
  *       - bearerAuth: []
@@ -723,7 +723,7 @@
  *             schema:
  *               type: object
  *               properties:
- *                 errors:
+ *                 errors: 
  *                   example: true
  *                 message:
  *                   type: string
@@ -824,7 +824,7 @@
  * @swagger
  * /projects/daily-notes/attendances:
  *   post:
- *     summary: Post Konfirmasi absen harian oleh workers
+ *     summary: Post Konfirmasi absen harian oleh workers - workers only
  *     tags: [Project-DailyNotes]
  *     security:
  *       - bearerAuth: []
@@ -1044,7 +1044,7 @@
  * @swagger
  * /projects/daily-notes/{finance}/delete:
  *   post:
- *     summary: Delete daily-notes data
+ *     summary: Delete daily-notes data - admin only
  *     tags: [Project-DailyNotes]
  *     security:
  *       - bearerAuth: []
@@ -1123,7 +1123,7 @@
  * @swagger
  * /projects/daily-notes/{finance}:
  *   post:
- *     summary: Post incomes/ expenses pada daily notes
+ *     summary: Post incomes/ expenses pada daily notes - admin only
  *     tags: [Project-DailyNotes]
  *     security:
  *       - bearerAuth: []
