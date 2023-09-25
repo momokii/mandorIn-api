@@ -71,7 +71,6 @@ function is_project_done(project, msg){
 
 
 // * ------------------------------ CONTROLLER ------------------------------ * //
-// TODO lakukan testing pada controller ini
 exports.get_all_projects_history = async(req, res, next) => {
     try{
 
@@ -87,13 +86,13 @@ exports.get_all_projects_history = async(req, res, next) => {
             // * jika admin/ role = 2
             if(req.role === 2){
                 total_data = await Project.countDocuments({
-                    name : {$regex : search.trim(), $options : "i"},
+                    nama : {$regex : search.trim(), $options : "i"},
                     id_pm: req.user_id.toString(),
                     on_progress: false
                 })
 
                 project_history = await Project.find({
-                    name : {$regex : search.trim(), $options : "i"},
+                    nama : {$regex : search.trim(), $options : "i"},
                     id_pm: req.user_id.toString(),
                     on_progress: false
                 })
@@ -106,13 +105,13 @@ exports.get_all_projects_history = async(req, res, next) => {
             } else {
                 // * jika workers / role = 3
                 total_data = await Project.countDocuments({
-                    name : {$regex : search.trim(), $options : "i"},
+                    nama : {$regex : search.trim(), $options : "i"},
                     workers: {$in : [req.user_id.toString()]},
                     on_progress: false
                 })
 
                 project_history = await Project.find({
-                    name : {$regex : search.trim(), $options : "i"},
+                    nama : {$regex : search.trim(), $options : "i"},
                     workers: {$in : [req.user_id.toString()]},
                     on_progress: false
                 }).populate({
@@ -124,12 +123,12 @@ exports.get_all_projects_history = async(req, res, next) => {
         } else {
             // * jika superadmin / role == 1
             total_data = await Project.countDocuments({
-                name : {$regex : search.trim(), $options : "i"},
+                nama : {$regex : search.trim(), $options : "i"},
                 on_progress: false
             })
 
             project_history = await Project.find({
-                name : {$regex : search.trim(), $options : "i"},
+                nama : {$regex : search.trim(), $options : "i"},
                 on_progress: false
             })
                 .populate({
