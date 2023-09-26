@@ -470,9 +470,19 @@
  *                                          items:
  *                                            type: string
  *                                        temp_forecast:
- *                                          type: number
+ *                                          type: array
+ *                                          items:
+ *                                            type: number
  *                                        precipitation_probability:
- *                                          type: number
+ *                                          type: array
+ *                                          items:
+ *                                            type: number
+ *                                        summary:
+ *                                          type: array
+ *                                          items:
+ *                                            type: array
+ *                                            items:
+ *                                              type: string
  *                                             
  *                                        
  *

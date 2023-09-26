@@ -1,8 +1,3 @@
-//const User = require('../models/users')
-// const Role = require('../models/roles')
-// const Project = require('../models/projects')
-// const ProjectWorker = require('../models/project-worker')
-// const { Op }  = require('sequelize')
 const {validationResult} = require("express-validator");
 const bcrypt = require("bcrypt");
 const statusCode = require('../utils/status-code').httpStatus_keyValue
@@ -113,14 +108,6 @@ exports.get_all_user = async (req, res, next) => {
         const start_data = (page - 1) * size
 
         if(req.query.free === 'true'){
-            // // * proyek yang sudah selesai
-            // const project = await Project.findAll({
-            //     where : {on_progress : false},
-            //     attributes: ['id']
-            // })
-            // const project_done = project.map(doc => doc.id)
-
-            // ffffffffffffffffffffffffffffff
 
             // * cari user yang free dengan filter user untuk mengecualikan data dari array "busy_workers" -> karena hanya cari user role 3 yang tanpa project bisa kecualikan saja
             // * dengan gunakan nosql dapat hanya dengan cara seperti di bawah
@@ -140,22 +127,9 @@ exports.get_all_user = async (req, res, next) => {
             if(req.query.pm === 'true'){
                 role = 2 // * jika yang dicari adalah pm/admin/user dengan role kode 2
             }
-            // total_data = await User.count({
-            //     where: {
-            //         id_role: role
-            //     }
-            // })
             total_data = await User.countDocuments({
                 id_role: role
             })
-            // users = await User.findAll({
-            //     include: Role,
-            //     where: {
-            //         id_role: role
-            //     },
-            //     offset: start_data,
-            //     limit: size
-            // })
             users = await User.find({
                 id_role: role
             })
@@ -167,18 +141,12 @@ exports.get_all_user = async (req, res, next) => {
         } else {
             // * cari semua data
             total_data = await User.countDocuments()
-            // users = await User.findAll({
-            //     include: Role,
-            //     offset: start_data,
-            //     limit: size
-            // })
             users = await User.find()
                 .populate('id_role')
                 .skip(start_data)
                 .limit(size)
         }
 
-        //const data = users
         // * karena nosql dan gunakan struktur sama pada data admin dan user -> ada penyesuaian struktur yang ditampilkan berdasarkan role-nya
         const data = users.map(data => {
             let data_return = {
@@ -233,12 +201,6 @@ exports.create_account = async (req, res, next) => {
         const hash_password = await bcrypt.hash(password, 12)
         const id_role = req.body.id_role
 
-        // await User.create({
-        //     username: username,
-        //     password: hash_password,
-        //     nama: nama,
-        //     id_role: id_role
-        // })
         const new_user = new User({
                 username: username,
                 password: hash_password,
@@ -271,7 +233,7 @@ exports.create_account = async (req, res, next) => {
 exports.change_password = async (req, res, next) => {
     try{
         const id = req.body.id_user
-        const user = await User.findById(id) //await User.findByPk(id)
+        const user = await User.findById(id)
         if(!user){
             throw_err("Data akun tidak ditemukan", statusCode['400_bad_request'])
         }
@@ -311,10 +273,9 @@ exports.change_info = async (req, res, next) => {
          * dibuat tidak bisa edit username dahulu karena jika bisa edit username -> maka akan ubah username dan token akan tidak valid karena pada token akan cek username juga
          */
         const id_user = req.body.id_user
-        //const new_username = req.body.username
         const new_nama = req.body.nama
 
-        const user = await User.findById(id_user) //User.findByPk(id_user)
+        const user = await User.findById(id_user)
         if(!user){
             throw_err("Terjadi error saat mencari informasi akun", statusCode['400_bad_request'])
         }
@@ -324,7 +285,6 @@ exports.change_info = async (req, res, next) => {
             throw_err(val_err.array()[0].msg, statusCode['400_bad_request'])
         }
 
-        //user.username = new_username
         user.nama = new_nama
         await user.save()
 
@@ -348,7 +308,7 @@ exports.change_info = async (req, res, next) => {
 exports.delete_user = async (req, res, next) => {
     try{
         const user_id = req.body.id_user
-        const user =  await User.findById(user_id) //await User.findByPk(user_id)
+        const user =  await User.findById(user_id) 
         if(!user){
             throw_err("Terjadi error saat mencari informasi akun", statusCode['400_bad_request'])
         }
@@ -365,9 +325,6 @@ exports.delete_user = async (req, res, next) => {
         // *! ---- CODE CODE CODE CODE CODE ---- * //
 
         // * -------------------------------------------------------
-
-        //await user.destroy()
-        //await User.findByIdAndRemove(user_id)
 
         res.status(statusCode['200_ok']).json({
             errors: false,

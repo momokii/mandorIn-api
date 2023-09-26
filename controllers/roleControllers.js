@@ -1,6 +1,4 @@
 const statusCode = require('../utils/status-code').httpStatus_keyValue
-//const Role = require('../models/roles')
-// * ganti ke mongoose
 const Role = require('../models/role')
 
 

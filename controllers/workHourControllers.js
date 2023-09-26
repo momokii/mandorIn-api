@@ -1,4 +1,3 @@
-//const Workhour = require('../models/workhours')
 const statusCode = require('../utils/status-code').httpStatus_keyValue
 //* change using nosql database
 const WorkHour = require('../models/workhour')

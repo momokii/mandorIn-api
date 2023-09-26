@@ -8,14 +8,9 @@ const swaggerUI = require('swagger-ui-express')
 const swaggerJSDoc = require('swagger-jsdoc')  
 const mongoose = require('mongoose') // * gunakan mmongoose
 const morgan = require('morgan')
-//const sequelize = require('./utils/db')
 
 // * CONST
 const PORT = process.env.PORT
-
-
-// * IMPORT DB SCHEMA (sql - sequelize)
-//require('./utils/db-schema')
 
 
 // * ROUTES
@@ -116,46 +111,6 @@ app.use((error, req, res, next) => {
 // * ------ APP CONNECTIONS
 async function startServer(){
     try{
-
-        // * using sql sequelize
-        // //* ----------------- ----------------- DEV ENV ----------------- -----------------
-        // if(process.env.FORCE_TABLE === 'true1'){
-        //     await sequelize.sync({ force: true }) // * force drop and create again table if table exist
-        //     const Role = require('./models/roles')
-        //     const Day = require('./models/days')
-        //     const User = require('./models/users')
-        //     const bcrypt = require('bcrypt')
-        //
-        //     await Role.bulkCreate([
-        //         {nama: 'superadmin'},
-        //         {nama: 'admin'},
-        //         {nama: 'user'}
-        //     ])
-        //
-        //     await Day.bulkCreate([
-        //         {nama: 'Sunday'},
-        //         {nama: 'Monday'},
-        //         {nama: 'Tuesday'},
-        //         {nama: 'Wednesday'},
-        //         {nama: 'Thursday'},
-        //         {nama: 'Friday'},
-        //         {nama: 'Saturday'},
-        //     ])
-        //
-        //     const pass = await bcrypt.hash('superadmin1', 12)
-        //     await User.create({
-        //         username: 'superadmin1',
-        //         password: pass,
-        //         nama: 'superadmin',
-        //         id_role: 1
-        //     })
-        //
-        //     console.log('Drop and Create All Table Again - Dev Environment')
-        // }
-        // // * ----------------- ----------------- ----------------- -----------------
-        //
-        //
-        // await sequelize.authenticate()
         await mongoose.connect(process.env.MONGODB_URI)
         app.listen(PORT)
         console.log('Connected, see swagger documentation on http://localhost:' + process.env.PORT + '/api-docs')

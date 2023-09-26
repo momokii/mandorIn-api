@@ -121,7 +121,7 @@
 
 
 
-// TODO perbaiki response sesuai dengan perubahan pada controller (dokumentasi belum lengkap)
+
 // * GET /projects/:id_project
 /**
  * @swagger
@@ -230,7 +230,57 @@
  *                               daily_notes:
  *                                 type: array
  *                                 items:
- *                                   type: string
+ *                                   type: object
+ *                                   properties:
+ *                                     incomes:
+ *                                       type: object
+ *                                       properties:
+ *                                         data:
+ *                                           type: string
+ *                                         total:
+ *                                           type: number
+ *                                         file:
+ *                                           type: string   
+ *                                     expenses:
+ *                                       type: object
+ *                                       properties:
+ *                                         data:
+ *                                           type: string
+ *                                         total:
+ *                                           type: number
+ *                                         file:
+ *                                           type: string   
+ *                                     is_extra_day:
+ *                                       type: boolean
+ *                                     daily_confirmation:
+ *                                       type: boolean
+ *                                     daily_attendances:
+ *                                       type: boolean  
+ *                                     date:
+ *                                       type: string 
+ *                                     note_tomorrow:
+ *                                       type: string 
+ *                                     worker_notes:
+ *                                       type: array
+ *                                       items:
+ *                                         type: object
+ *                                         properties:
+ *                                           id_user:
+ *                                             type: string 
+ *                                           data:
+ *                                             type: string
+ *                                     attendances:
+ *                                       type: array
+ *                                       items:
+ *                                         type: object
+ *                                         properties:
+ *                                           id_user:
+ *                                             type: string 
+ *                                           attendances:
+ *                                             type: boolean
+ *                                           attendances_time:
+ *                                             type: string       
+ *                                                 
  *
  *       '401':
  *         description: Akun tidak punya akses

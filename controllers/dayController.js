@@ -1,8 +1,6 @@
-//const Day = require('../models/days')
 const statusCode = require('../utils/status-code').httpStatus_keyValue
 // * ganti ke mongo
 const Day = require('../models/day')
-const axios = require('axios')
 
 // * ------------------------------ FUNCTION ------------------------------ * //
 

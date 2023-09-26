@@ -3,7 +3,6 @@ const projectController = require('../controllers/projectController')
 
 const is_auth = require('../middleware/is-auth')
 const is_superadmin = require('../middleware/role-checking').is_superadmin
-const is_user = require('../middleware/role-checking').is_user
 
 // * ------------------------------ ROUTING ------------------------------ * //
 

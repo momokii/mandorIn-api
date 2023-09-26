@@ -1,7 +1,5 @@
 const jwt = require('jsonwebtoken')
-//const User = require('../models/users')
 const statusCode = require('../utils/status-code').httpStatus_keyValue
-// * ganti gunakan mongoose
 const User = require('../models/user')
 
 function err(msg, code){
@@ -30,9 +28,7 @@ module.exports = async (req, res, next) => {
             err('Token Tidak Valid sini', statusCode['401_unauthorized'])
         }
 
-        if(decode_token.auth !== user.token.auth 
-            //|| decode_token.username !== user.username
-            ){
+        if(decode_token.auth !== user.token.auth){
             err('Token Tidak Valid', statusCode['401_unauthorized'])
         }
 

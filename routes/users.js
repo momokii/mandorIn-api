@@ -1,5 +1,4 @@
 const router = require('express').Router()
-//const User = require('../models/users')
 const {body} = require('express-validator')
 const statusCode = require('../utils/status-code').httpStatus_keyValue
 const userController = require('../controllers/userControllers')

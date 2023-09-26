@@ -2,7 +2,6 @@ const statusCode = require('../utils/status-code').httpStatus_keyValue
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const crypto = require('crypto')
-//const User = require('../models/users')
 // * gunakan mongoose
 const User = require('../models/user')
 
