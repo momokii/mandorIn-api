@@ -1,3 +1,4 @@
+require('dotenv')
 const statusCode = require('../utils/status-code').httpStatus_keyValue
 const {update_weather_daily} = require('../utils/update-weather-daily')
 const BaseDailyNotes = require('../models/daily-notes-struct')
@@ -6,6 +7,8 @@ const date_formatter = require('date-fns')
 const cron = require('node-cron')
 const cron_func = require('../utils/cron-function')
 const mongoose = require('mongoose')
+const QRCode = require('qrcode')
+const jwt = require('jsonwebtoken')
 
 // * gunakan mongoose
 const Project = require('../models/project')
@@ -822,26 +825,56 @@ exports.daily_attendances_confirmation = async (req, res, next) => {
 
 exports.post_attendance_workers = async (req, res, next) => {
     try{
-        const id_project = req.body.id_project
         // ! ---------------------- FILTER & AUTH USER ----------------------- * //
-        const project = await Project.findById(id_project)
-            .populate({
-                path: "id_workhour"
-            })
-        if(!project){
-            throw_err("Data tidak ditemukan", statusCode['404_not_found'])
-        }
+
+        let project
 
         const user = await User.findById(req.user_id)
         if(!user){
             throw_err("Token Error, akun tidak ditemukan", statusCode['404_not_found'])
         }
-
         // * cek jika user bukan anggota project
         let user_project_id = user.id_project // * ada kemungkinan NULL maka tidak bisa toString()
         if(user_project_id === null){
             user_project_id = ""
         }
+
+        // * verifikasi jika gunakan QR untuk absen
+        if(req.body.use_qr === true){
+            const qr_data = req.body.qr_code 
+            const decode_token = jwt.verify(qr_data, process.env.JWT_SECRET)
+            if(!decode_token){
+                throw_err("Absen gagal, QR Code tidak valid", statusCode['400_bad_request'])
+            }
+
+            project = await Project.findById(decode_token.id_project)
+                .populate({
+                    path: "id_workhour"
+                })
+            if(!project){
+                throw_err("Absen gagal, data project tidak ditemukan", statusCode['400_bad_request'])
+            }
+
+            if(project._id.toString() !== user_project_id.toString()){
+                throw_err("Absen gagal, User tidak terlibat pada project terkait", statusCode['400_bad_request'])
+            }
+
+            if(decode_token.date !== today_date_str()){
+                throw_err("Absen gagal, Tanggal pada kode QR tidak valid", statusCode['400_bad_request'])
+            }
+
+        } else {
+            // * jika gunakan absen manual
+            const id_project = req.body.id_project
+            project = await Project.findById(id_project)
+                .populate({
+                    path: "id_workhour"
+                })
+            if(!project){
+                throw_err("Data tidak ditemukan", statusCode['404_not_found'])
+            }
+        }
+
         if(user_project_id.toString() !== project._id.toString()){
             throw_err("User tidak terlibat dalam project terkait", statusCode['401_unauthorized'])
         }
@@ -1196,9 +1229,6 @@ exports.post_dailynotes = async (req, res, next) => {
             new_daily_notes.attendances.push(data_attendance)
         })
 
-        project.daily_notes.push(new_daily_notes) // * tambah data daily notes baru ke project
-        
-
         // * if EXTRA DAY
         const today_code = (new Date()).getDay()
         if((today_code < project.id_day_work_start) || (today_code > project.id_day_work_last)){
@@ -1211,6 +1241,31 @@ exports.post_dailynotes = async (req, res, next) => {
             throw_err("Gagal add daily notes", statusCode['500_internal_server_error'])
         }
 
+        // * update create daily-note-qr-code
+        const code_qr = jwt.sign({
+            id_project: id_project,
+            date: formatted_date
+        }, process.env.JWT_SECRET)
+
+        req.code_qr = code_qr
+        req.type = 'qr-daily' 
+        req.id_project = id_project
+        req.daily_notes = project.daily_notes
+        req.daily_notes_date = formatted_date
+        const post_qr_code = await file_controller.upload_file(req)
+        if(post_qr_code.errors === true){
+            throw_err("Buat QR Code gagal", statusCode['500_internal_server_error'])
+        }
+
+        // * hapus link qr-code hari sebelumnya
+        if(project.daily_notes.length > 0){
+            project.daily_notes[project.daily_notes.length - 1].qr_code_attendances = null
+        } 
+
+        new_daily_notes.qr_code_attendances = post_qr_code.publicUrl
+
+        project.daily_notes.push(new_daily_notes) // * tambah data daily notes baru ke project
+
         await project.save({session})
         await weather.data.save({session})
 
@@ -1218,7 +1273,7 @@ exports.post_dailynotes = async (req, res, next) => {
         session.endSession()
 
         res.status(statusCode['200_ok']).json({
-            errors: false,
+            errors: false, 
             message: "Berhasil buat daily notes baru"
         })
 

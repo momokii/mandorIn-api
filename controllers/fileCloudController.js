@@ -5,6 +5,7 @@ const storage = new Storage({ keyFilename: "./mandorin-sa.json" })
 const bucket = storage.bucket('mandorin-dev')
 
 const crypto = require('crypto')
+const QRCode = require('qrcode')
 
 // * ------------------------------ FUNCTION ------------------------------ * //
 
@@ -28,25 +29,27 @@ exports.upload_file = async (req, res, next) => {
 
         let filename
         let foldername
-        
-        // * filter tipe file diupload
-        const file_in = ['zip', 'rar', 'jpg', 'jpeg', 'png', 'pdf'] // * jika ingin jadi dinamis bisa gunakan req.file_type_allow -> misalnya untuk berikan array extensi file yang diperbolehkan
-        const file_name = req.file.originalname
-        const file_split = file_name.split('.') 
-        const file_ext = file_split[file_split.length - 1]
-        if(!file_in.includes(file_ext)){
-            return {
-                errors: true,
-                message: "file extensi tidak diperbolehkan",
-                statusCode: statusCode['400_bad_request']
-            }
-        }
-        // * misal gunakan filtering juga untuk tipe file yang dikirmkan
+        let qr_code
 
         // * format file expenses/incomes
         // ? (date)-(expenses/incomes)-(randombytes).extension
         // * gunakan random bytes karena nanti akan gunakan sistem jika upload lagi pada hari yang sama maka akan replace dengan lakukan hapus yang sebelumnya
         if(req.type === 'daily-notes'){
+
+            // * filter tipe file diupload
+            const file_in = ['zip', 'rar', 'jpg', 'jpeg', 'png', 'pdf'] // * jika ingin jadi dinamis bisa gunakan req.file_type_allow -> misalnya untuk berikan array extensi file yang diperbolehkan
+            const file_name = req.file.originalname
+            const file_split = file_name.split('.') 
+            const file_ext = file_split[file_split.length - 1]
+            if(!file_in.includes(file_ext)){
+                return {
+                    errors: true,
+                    message: "file extensi tidak diperbolehkan",
+                    statusCode: statusCode['400_bad_request']
+                }
+            }
+            // * misal gunakan filtering juga untuk tipe file yang dikirmkan
+
             foldername = 'daily-notes/'
             const random_name = crypto.randomBytes(4).toString('hex')
             // * req.daily_notes_type -> "incomes/expenses"
@@ -58,6 +61,19 @@ exports.upload_file = async (req, res, next) => {
                 const filepath_del = 'daily-notes/' + del_file
                 await bucket.file(filepath_del).delete()
             }
+        } else if(req.type === 'qr-daily'){
+
+            if(req.daily_notes.length > 0){
+                // * jika sudah ada hari sebelumnya, maka hapus data qr hari sebelumnya
+                const file_del_arr = req.daily_notes[req.daily_notes.length - 1].qr_code_attendances.split('/')
+                const file_del = file_del_arr[file_del_arr.length - 1]
+                const filepath_del = "qr-attendances/" + file_del 
+                await bucket.file(filepath_del).delete() 
+            }
+
+            qr_code = await QRCode.toBuffer(req.code_qr)
+            filename = req.id_project + "-" + req.daily_notes_date.toString() + ".png"
+            foldername = 'qr-attendances/'
         }
 
         const uploadpath = foldername + filename // * full filepath 
@@ -69,7 +85,7 @@ exports.upload_file = async (req, res, next) => {
             resumable: false
         })
 
-        blobStream.on('error', err => {
+        blobStream.on('error', err => { 
             return {
                 errors: true,
                 message: "Error saat upload",
@@ -85,7 +101,12 @@ exports.upload_file = async (req, res, next) => {
 
         })
 
-        blobStream.end(req.file.buffer)
+        if(req.file){
+            blobStream.end(req.file.buffer)
+        } else {
+            blobStream.end(qr_code)
+        }
+        
 
         return {
             errors: false, 

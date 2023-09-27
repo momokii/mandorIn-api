@@ -834,7 +834,7 @@
  * @swagger
  * /projects/daily-notes/attendances:
  *   post:
- *     summary: Post Konfirmasi absen harian oleh workers - workers only
+ *     summary: Post absen harian oleh workers - workers only
  *     tags: [Project-DailyNotes]
  *     security:
  *       - bearerAuth: []
@@ -847,6 +847,10 @@
  *             properties:
  *               id_project:
  *                 type: string
+ *               use_qr:
+ *                 type: boolean
+ *               qr_code:
+ *                 type: string    
  *
  *     responses:
  *       '200':

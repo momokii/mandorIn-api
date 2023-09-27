@@ -8,6 +8,7 @@ class DailyNotesStruct {
         this.daily_confirmation = false
         this.date = date
         this.note_tomorrow = null
+        this.qr_code_attendances = null
         this.incomes = {
             data : null,
             total: 0

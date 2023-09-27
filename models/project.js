@@ -87,6 +87,10 @@ const projectSchema = new Schema({
         },
         note: String ,
         note_tomorrow: String,
+        qr_code_attendances: {
+            type: String,
+            default: null
+        },
         incomes: {
             data: String,
             total: {type: Number, default: 0},

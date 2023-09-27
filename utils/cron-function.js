@@ -1,7 +1,10 @@
+require('dotenv')
 const BaseDailyNotes = require('../models/daily-notes-struct')
 const date_formatter = require('date-fns')
 const {update_weather_daily} = require('../utils/update-weather-daily')
 const mongoose = require('mongoose')
+const jwt = require('jsonwebtoken')
+const file_controller = require('../controllers/fileCloudController')
 
 const Project = require('../models/project')
 
@@ -64,13 +67,39 @@ const post_daily_notes_cron = async (id_project) => {
             }
             new_daily_notes.attendances.push(data_attendance)
         }
-        project.daily_notes.push(new_daily_notes)
+        
 
         // * weather data api update
         const weather = await update_weather_daily(project)
         if(!weather.status){
             throw new Error('Update weather failed')
         }
+
+        const code_qr = jwt.sign({
+            id_project: id_project,
+            date: today_str_date
+        }, process.env.JWT_SECRET)
+
+        let req = {
+            code_qr: code_qr,
+            type: 'qr-daily',
+            id_project: id_project,
+            daily_notes: project.daily_notes,
+            daily_notes_date : today_str_date
+        }
+        const post_qr_code = await file_controller.upload_file(req) 
+        if(post_qr_code.errors === true){
+            console.log("Buat Daily Code gagal")
+            await session.abortTransaction()
+        }
+
+        new_daily_notes.qr_code_attendances = post_qr_code.publicUrl
+
+        if(project.daily_notes.length > 0){
+            project.daily_notes[project.daily_notes.length - 1].qr_code_attendances = null
+        }
+
+        project.daily_notes.push(new_daily_notes)
 
         // * save data
         await project.save({session})
