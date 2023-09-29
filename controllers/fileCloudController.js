@@ -65,10 +65,13 @@ exports.upload_file = async (req, res, next) => {
 
             if(req.daily_notes.length > 0){
                 // * jika sudah ada hari sebelumnya, maka hapus data qr hari sebelumnya
-                const file_del_arr = req.daily_notes[req.daily_notes.length - 1].qr_code_attendances.split('/')
-                const file_del = file_del_arr[file_del_arr.length - 1]
-                const filepath_del = "qr-attendances/" + file_del 
-                await bucket.file(filepath_del).delete() 
+                const file_del_data = req.daily_notes[req.daily_notes.length - 1].qr_code_attendances 
+                if(file_del_data){
+                    const file_del_arr = file_del_data.split('/')
+                    const file_del = file_del_arr[file_del_arr.length - 1]
+                    const filepath_del = "qr-attendances/" + file_del 
+                    await bucket.file(filepath_del).delete() 
+                }
             }
 
             qr_code = await QRCode.toBuffer(req.code_qr)

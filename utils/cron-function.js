@@ -28,7 +28,6 @@ const post_daily_notes_cron = async (id_project) => {
     session.startTransaction()
 
     try{
-
         // ! --------------------- FILTER --------------------- * //
         const project = await Project.findById(id_project)
         if(!project) throw new Error('Project tidak ditemukan')
@@ -89,8 +88,7 @@ const post_daily_notes_cron = async (id_project) => {
         }
         const post_qr_code = await file_controller.upload_file(req) 
         if(post_qr_code.errors === true){
-            console.log("Buat Daily Code gagal")
-            await session.abortTransaction()
+            throw new Error('Create QR Failed')
         }
 
         new_daily_notes.qr_code_attendances = post_qr_code.publicUrl

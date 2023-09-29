@@ -462,6 +462,12 @@ exports.get_daily_notes = async (req, res, next) => {
                 }
             }
             response.data = daily_note
+            if(!daily_note) {
+                return res.status(statusCode['200_ok']).json({
+                    errors: false,
+                    message: "Data tidak ditemukan / Project sedang libur"
+                })
+            }
 
             // * get data tomorrow_note dari hari kemarin (daily-notes hari sebelumnya)
             let today_notes_from_yesterday
