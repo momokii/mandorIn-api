@@ -4,15 +4,16 @@ A simple and efficient Node.js-based API project for managing a MandorIn Applica
 
 ## Table of Contents
 
-- [About the Project](#about-the-project)
-- [Technologies Used](#technologies-used)
-- [Getting Started](#getting-started)
-- [Installation](#installation)
-- [Appendix](#appendix)
+- [Portfolio Project: MandorIn-API](#portfolio-project-mandorin-api)
+  - [Table of Contents](#table-of-contents)
+  - [About the Project](#about-the-project)
+  - [Technologies Used](#technologies-used)
+  - [Getting Started](#getting-started)
+  - [Appendix](#appendix)
 
 ## About the Project
 
-My Portfolio API is a RESTful API that serves as the backend for my personal portfolio website. It handles portfolio item data, project descriptions, and image storage using Google Cloud Storage. The project was created to showcase my skills in web development, particularly with Node.js and Express.
+My Portfolio API is a RESTful API that serves as the backend for Mandorin App. It handles portfolio item data, project descriptions, and image storage using Google Cloud Storage. The project was created to showcase my skills in web development, particularly with Node.js and Express.
 
 ## Technologies Used
 

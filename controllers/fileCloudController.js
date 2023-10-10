@@ -1,8 +1,23 @@
+require('dotenv')
 const statusCode = require('../utils/status-code').httpStatus_keyValue
 const {Storage} = require('@google-cloud/storage')
 const {format} = require('util')
-const storage = new Storage({ keyFilename: "./mandorin-sa.json" })
-const bucket = storage.bucket('mandorin-dev')
+const storage = new Storage({
+    projectId: process.env.PROJECT_ID,
+    credentials: { 
+        type: process.env.TYPE,
+        project_id: process.env.PROJECT_ID,
+        private_key_id: process.env.PRIVATE_KEY_ID,
+        private_key: process.env.PRIVATE_KEY.replace(/\\n/g, '\n'),
+        client_email: process.env.CLIENT_EMAIL,
+        client_id: process.env.CLIENT_ID,
+        auth_uri: process.env.AUTH_URI,
+        token_uri: process.env.TOKEN_URI,
+        auth_provider_x509_cert_url: process.env.AUTH_PROVIDER,
+        client_x509_cert_url: process.env.CLIENT_CERT_URL
+    }
+})
+const bucket = storage.bucket(process.env.BUCKET_DEV)
 
 const crypto = require('crypto')
 const QRCode = require('qrcode')
@@ -32,7 +47,7 @@ exports.upload_file = async (req, res, next) => {
         let qr_code
 
         // * format file expenses/incomes
-        // ? (date)-(expenses/incomes)-(randombytes).extension
+        // ? id_project-(date)-(expenses/incomes)-(randombytes).extension
         // * gunakan random bytes karena nanti akan gunakan sistem jika upload lagi pada hari yang sama maka akan replace dengan lakukan hapus yang sebelumnya
         if(req.type === 'daily-notes'){
 
@@ -48,12 +63,11 @@ exports.upload_file = async (req, res, next) => {
                     statusCode: statusCode['400_bad_request']
                 }
             }
-            // * misal gunakan filtering juga untuk tipe file yang dikirmkan
 
             foldername = 'daily-notes/'
             const random_name = crypto.randomBytes(4).toString('hex')
             // * req.daily_notes_type -> "incomes/expenses"
-            filename = req.daily_notes_date.toString() + '-' + req.daily_notes_type + '-' + random_name + "." + file_ext
+            filename = req.id_project + "-" + req.daily_notes_date.toString() + '-' + req.daily_notes_type + '-' + random_name + "." + file_ext
 
             if(req.file_now){ // * delete jika sebelumnya ada file
                 const file_del_arr = req.file_now.split('/')

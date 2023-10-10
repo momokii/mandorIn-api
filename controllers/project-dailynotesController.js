@@ -1126,6 +1126,7 @@ exports.post_incomes_expenses = async (req, res, next) => {
                 req.type = 'daily-notes'
                 req.daily_notes_date = formatted_date  
                 req.daily_notes_type = ket 
+                req.id_project = project._id.toString()
 
                 if(ket === 'expenses'){
                     data.expenses.data = data_post // string keterangan total harian
