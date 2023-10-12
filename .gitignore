@@ -13,3 +13,4 @@ utils/db-schema.js
 mandorin-sa.json
 .eslintrc.json 
 playground.js
+.dockerignore
