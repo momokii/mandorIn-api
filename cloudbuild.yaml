@@ -1,11 +1,11 @@
 steps:
   - id: 'build images'
     name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPONAME}/mandorin-be:$SHORT_SHA', '.']
+    args: ['build', '-t', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPONAME}/${_IMAGESNAME}:$SHORT_SHA', '.']
 
   - id: 'push images'
     name: 'gcr.io/cloud-builders/docker'
-    args: ['push', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPONAME}/mandorin-be:$SHORT_SHA']
+    args: ['push', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPONAME}/${_IMAGESNAME}:$SHORT_SHA']
 
   - id: 'deploy images'
     name: 'gcr.io/cloud-builders/gcloud'
@@ -15,7 +15,7 @@ steps:
       - 'deploy'
       - '${_SERVICESNAME}'
       - '--image'
-      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPONAME}/mandorin-be:$SHORT_SHA'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPONAME}/${_IMAGESNAME}:$SHORT_SHA'
       - '--region'
       - '${_REGION}'
       - '--platform'
@@ -26,6 +26,7 @@ substitutions:
   _REGION: asia-southeast2
   _REPONAME: mandorin-be
   _SERVICESNAME: mandorin-be
+  _IMAGESNAME: mandorin-be
 
 options:
   logging: CLOUD_LOGGING_ONLY
