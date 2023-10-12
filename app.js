@@ -33,7 +33,7 @@ const swaggerOptions = {
         openapi: '3.0.0',
         info: {
             title: 'mandorIn API',
-            version: '1.0.0',
+            version: '1.0',
             description: 'Welcome to the API mandorIn documentation! API mandorIn is a powerful and versatile API built with Node.js and Express, seamlessly integrated with MongoDB as its robust database. This API serves as the backbone of Application mandorIn, catering to the diverse needs of both web and mobile platforms. <br>If you encounter any issues or have questions about the API, our dedicated support team is here to assist you.',
             contact: {
                 name: 'Kelana Chandra Helyandika',

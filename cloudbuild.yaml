@@ -1,26 +1,11 @@
 steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['build', '-t', 'asia-southeast2-docker.pkg.dev/$PROJECT_ID/mandorin-be/mandorin-be:$SHORT_SHA', '.']
+    id: 'build images'
 
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'asia-southeast2-docker.pkg.dev/$PROJECT_ID/mandorin-be/mandorin-be:$SHORT_SHA']
-
-  - name: 'gcr.io/cloud-builders/docker'
-    args:
-      - 'images'
-      - 'list'
-      - 'asia-southeast2-docker.pkg.dev/$PROJECT_ID/mandorin-be/mandorin-be'
-    entrypoint: 'bash'
-    id: 'list_images'
-
-  - name: 'gcr.io/cloud-builders/docker'
-    args:
-      - 'rmi'
-      - '--force'
-    entrypoint: 'bash'
-    id: 'delete_images'
-    waitFor:
-      - 'list_images'
+    id: 'push images'
 
   - name: 'gcr.io/cloud-builders/gcloud'
     entrypoint: 'gcloud'
@@ -35,6 +20,7 @@ steps:
       - '--platform'
       - 'managed'
       - '--allow-unauthenticated'
+    id: 'deploy images'
 
 options:
   logging: CLOUD_LOGGING_ONLY
