@@ -47,3 +47,17 @@
  *   name: Days (Hari) 
  *   description: Data Hari - SuperAdmin
  */ 
+
+/**
+ * @swagger
+ * tags:
+ *   name: Cron Function
+ *   description: Pengaturan Cron Function - SuperAdmin
+ */ 
+
+/**
+ * @swagger
+ * tags:
+ *   name: Dashboard
+ *   description: Dashboard Data
+ */ 

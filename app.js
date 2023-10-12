@@ -15,6 +15,7 @@ const PORT = process.env.PORT
 
 // * ROUTES
 const authRoutes = require('./routes/auths')
+const cronRoutes = require('./routes/cron-func')
 const dayRoutes = require('./routes/days')
 const dahsboardRoutes = require('./routes/dashboard')
 const userRoutes = require('./routes/users')
@@ -33,7 +34,7 @@ const swaggerOptions = {
         info: {
             title: 'mandorIn API',
             version: '1.0.0',
-            description: 'lorem ipsum',
+            description: 'Welcome to the API mandorIn documentation! API mandorIn is a powerful and versatile API built with Node.js and Express, seamlessly integrated with MongoDB as its robust database. This API serves as the backbone of Application mandorIn, catering to the diverse needs of both web and mobile platforms. <br>If you encounter any issues or have questions about the API, our dedicated support team is here to assist you.',
             contact: {
                 name: 'Kelana Chandra Helyandika',
                 url: 'https://kelanach.cyclic.app/',
@@ -41,6 +42,10 @@ const swaggerOptions = {
             }
         },
         servers: [
+            {
+                url: 'https://mandorin-be-mdmlfcl63q-et.a.run.app',
+                description: 'Production Server (Cloud Run)'
+            },
             {
                 url: 'http://localhost:' + PORT,
                 description: 'Local Dev Server'
@@ -83,6 +88,7 @@ app.use(morgan(customFormat)); // ? set morgan console logging
 app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerSpecs))
 
 app.use(authRoutes)
+app.use('/cron-funcs', cronRoutes)
 app.use('/dashboard', dahsboardRoutes)
 app.use('/users', userRoutes)
 app.use('/roles', roleRoutes)

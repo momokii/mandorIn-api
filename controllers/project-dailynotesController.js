@@ -4,10 +4,7 @@ const {update_weather_daily} = require('../utils/update-weather-daily')
 const BaseDailyNotes = require('../models/daily-notes-struct')
 const format_date = require('date-fns/format')
 const date_formatter = require('date-fns')
-const cron = require('node-cron')
-const cron_func = require('../utils/cron-function')
 const mongoose = require('mongoose')
-const QRCode = require('qrcode')
 const jwt = require('jsonwebtoken')
 
 // * gunakan mongoose
@@ -16,14 +13,6 @@ const User = require('../models/user')
 const Weather = require('../models/weather')
 const file_controller = require('../controllers/fileCloudController')
 
-
-// * ------------------------------ CRON ------------------------------ * //
-
-cron.schedule('*/1 * * * *', async () => {
-
-    await cron_func.update_daily_notes_projects_cron_func()
-
-})
 
 // * ------------------------------ FUNCTION ------------------------------ * //
 
