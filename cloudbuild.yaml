@@ -1,26 +1,31 @@
 steps:
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'asia-southeast2-docker.pkg.dev/$PROJECT_ID/mandorin-be/mandorin-be:$SHORT_SHA', '.']
-    id: 'build images'
+  - id: 'build images'
+    name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPONAME}/mandorin-be:$SHORT_SHA', '.']
 
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'asia-southeast2-docker.pkg.dev/$PROJECT_ID/mandorin-be/mandorin-be:$SHORT_SHA']
-    id: 'push images'
+  - id: 'push images'
+    name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPONAME}/mandorin-be:$SHORT_SHA']
 
-  - name: 'gcr.io/cloud-builders/gcloud'
+  - id: 'deploy images'
+    name: 'gcr.io/cloud-builders/gcloud'
     entrypoint: 'gcloud'
     args:
       - 'run'
       - 'deploy'
-      - 'mandorin-be'
+      - '${_SERVICESNAME}'
       - '--image'
-      - 'asia-southeast2-docker.pkg.dev/$PROJECT_ID/mandorin-be/mandorin-be:$SHORT_SHA'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPONAME}/mandorin-be:$SHORT_SHA'
       - '--region'
-      - 'asia-southeast2'
+      - '${_REGION}'
       - '--platform'
       - 'managed'
       - '--allow-unauthenticated'
-    id: 'deploy images'
+
+substitutions:
+  _REGION: asia-southeast2
+  _REPONAME: mandorin-be
+  _SERVICESNAME: mandorin-be
 
 options:
   logging: CLOUD_LOGGING_ONLY
