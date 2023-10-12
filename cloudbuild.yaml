@@ -3,8 +3,8 @@ steps:
     args: ['build', '-t', 'asia-southeast2-docker.pkg.dev/$PROJECT_ID/mandorin-be/mandorin-be:$SHORT_SHA', '.']
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'asia-southeast2-docker.pkg.dev/$PROJECT_ID/mandorin-be/mandorin-be:$SHORT_SHA']
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: gcloud
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'gcloud'
     args:
       - 'run'
       - 'deploy'
