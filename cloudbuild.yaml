@@ -17,6 +17,5 @@ steps:
       - 'managed'
       - '--allow-unauthenticated'
 
-build:
-  options:
-    logging: CLOUD_LOGGING_ONLY
+options:
+  logging: CLOUD_LOGGING_ONLY
