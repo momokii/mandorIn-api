@@ -4,14 +4,16 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const cors = require('cors')
 const helmet = require('helmet')
-const swaggerUI = require('swagger-ui-express') 
-const swaggerJSDoc = require('swagger-jsdoc')  
+const swaggerUI = require('swagger-ui-express')
 const mongoose = require('mongoose') // * gunakan mmongoose
 const morgan = require('morgan')
+const yamljs = require('yamljs')
+
+// * yaml file oas 2.0 spec doc
+const opeanapispec = yamljs.load('./swagger-doc/mandorin-oas-2-0.yaml')
 
 // * CONST
 const PORT = process.env.PORT
-
 
 // * ROUTES
 const authRoutes = require('./routes/auths')
@@ -26,45 +28,6 @@ const workhourRoutes = require('./routes/workhours')
 
 
 // * --------------------- --------------------- APP
-
-// * --------------- SWAGGER CONFIG
-const swaggerOptions = {
-    definition: {
-        openapi: '3.0.0',
-        info: {
-            title: 'mandorIn API',
-            version: '1.0',
-            description: 'Welcome to the API mandorIn documentation! API mandorIn is a powerful and versatile API built with Node.js and Express, seamlessly integrated with MongoDB as its robust database. This API serves as the backbone of Application mandorIn, catering to the diverse needs of both web and mobile platforms. <br>If you encounter any issues or have questions about the API, our dedicated support team is here to assist you.',
-            contact: {
-                name: 'Kelana Chandra Helyandika',
-                url: 'https://kelanach.cyclic.app/',
-                email: 'kelanachandra7@gmail.com'
-            }
-        },
-        servers: [
-            {
-                url: 'https://mandorin-be-mdmlfcl63q-et.a.run.app',
-                description: 'Production Server (Cloud Run)'
-            },
-            {
-                url: 'http://localhost:' + PORT,
-                description: 'Local Dev Server'
-            }
-        ],
-        components: {
-            securitySchemes: {
-                bearerAuth: {
-                    type:'http',
-                    scheme: 'bearer',
-                    bearerFormat: 'JWT'
-                }
-            }
-        }
-    },
-    apis: ['./swagger-doc/*.js']
-}
-const swaggerSpecs = swaggerJSDoc(swaggerOptions)
-
 
 // * --------------- APP CONFIG
 const app = express()
@@ -85,7 +48,7 @@ app.use(morgan(customFormat)); // ? set morgan console logging
 
 
 // * ------ ROUTES SET
-app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerSpecs))
+app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(opeanapispec))
 
 app.use(authRoutes)
 app.use('/cron-funcs', cronRoutes)
