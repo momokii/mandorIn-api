@@ -44,7 +44,7 @@ RUN npm install --production --silent && mv node_modules ../
 
 COPY . .
 
-EXPOSE 3000
+EXPOSE 8080
 
 RUN chown -R node /usr/src/app
 
