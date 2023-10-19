@@ -1,9 +1,7 @@
-ARG NODE_ENV
-ARG PORT
-
 FROM node:lts-alpine
 
 ENV NODE_ENV=production
+ENV PORT=8082
 ENV JWT_SECRET=mandorinajayakan
 ENV MONGODB_URI=mongodb+srv://kelana-learn1:kelana-learn1@cluster-learn.8zudfto.mongodb.net/prjct9-mandroin
 ENV BUCKET_DEV=mandorin-dev
@@ -36,4 +34,3 @@ RUN chown -R node /usr/src/app
 USER node
 
 CMD ["npm", "start"]
-
