@@ -14,3 +14,4 @@ mandorin-sa.json
 .eslintrc.json 
 playground.js
 .dockerignore
+cloudbuild.yaml

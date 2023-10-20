@@ -1,0 +1,2531 @@
+openapi: 3.0.0
+info:
+  version: '1.0'
+  title: mandorIn API
+  description: Welcome to the API mandorIn documentation! API mandorIn is a powerful and versatile API built with Node.js and Express, seamlessly integrated with MongoDB as its robust database. This API serves as the backbone of Application mandorIn, catering to the diverse needs of both web and mobile platforms. If you encounter any issues or have questions about the API, our dedicated support team is here to assist you.
+  contact:
+    name: Kelana Chandra Helyandika
+    url: https://kelanach.cyclic.app/
+    email: kelanachandra7@gmail.com
+servers:
+  - url: https://mandorin-be-mdmlfcl63q-et.a.run.app
+    description: Production server
+  - url: https://mandorin-gateway-mdmlfcl63q-et.a.run.app
+    description: API Gateway Production server
+  - url: http://localhost:8080
+    description: API Gateway local testing server
+  - url: http://localhost:8082
+    description: Local Server
+
+tags:
+  - name: Auth
+    description: Proses Autentikasi Akun
+  - name: User
+    description: Pengaturan User
+  - name: Project
+    description: Pengaturan Project
+  - name: Project-DailyNotes
+    description: Pengaturan DailyNotes pada project
+  - name: Role
+    description: Pengaturan Role - SuperAdmin
+  - name: Waktu Kerja
+    description: Pengaturan Hari Kerja - SuperAdmin
+  - name: Days (Hari)
+    description: Data Hari - SuperAdmin
+  - name: Cron Function
+    description: Pengaturan Cron Function - SuperAdmin
+  - name: Dashboard
+    description: Dashboard Data
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema: 
+            type: object 
+            properties: 
+              errors: 
+                type: booelan 
+                example: true
+              message: 
+                type: string 
+                example: Internal Server Error
+
+    AccountNotHaveAccess:
+      description: Account Doesn't Have Access
+      content:
+        application/json:
+          schema: 
+            type: object 
+            properties: 
+              errors: 
+                type: boolean 
+                example: true
+              message: 
+                type: string 
+                example: Account Doesn't Have Access
+
+    DataNotFound:
+      description: Data Not Found
+      content:
+        application/json:
+          schema: 
+            type: object 
+            properties:
+              errors: 
+                type: boolean
+                example: true
+              message: 
+                type: string 
+                example: Data Not Found
+
+    DataInputNotValid:
+      description: Input Not Valid
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              errors:
+                type: boolean
+                example: true
+              message:
+                type: string
+                example: Data not valid
+
+
+paths:
+# ! ------------------------ ---- ------------------------ ! #
+# ! ------------------------ AUTH ------------------------ ! #
+# ! ------------------------ ---- ------------------------ ! #
+  /login:
+    post:
+      summary: Login untuk semua user
+      tags:
+        - Auth
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: Data login
+          required: true
+          schema:
+            type: object
+            properties:
+              username:
+                example: username1
+              password:
+                example: password1
+      responses:
+        '200':
+          description: Sukses Login dan dapatkan token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    example: false
+                  message:
+                    example: Success Login
+                  data:
+                    type: object
+                    properties:
+                      username:
+                        type: string
+                      token_type:
+                        example: Bearer
+                      token:
+                        type: string
+        '400':
+          $ref: '#/components/schemas/DataInputNotValid'
+        '500':
+          $ref: '#/components/schemas/InternalServerError'
+
+  /logout:
+    post:
+      summary: Logout akun user yang sedang login
+      tags:
+        - Auth
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Success Logout
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    example: false
+                  message:
+                    example: Success Logout
+        '500':
+          $ref: '#/components/schemas/InternalServerError'
+
+
+
+
+
+# ! ------------------------ ---- ------------------------ ! #
+# ! ------------------------ USER ------------------------ ! #
+# ! ------------------------ ---- ------------------------ ! #
+  /users/self:
+    get:
+      summary: Get data user login
+      tags: [User]
+      security:
+        - bearerAuth: []
+      responses:
+        '200_user':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    example: false
+                  message:
+                    example: Dapatkan data user
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      username:
+                        type: string
+                      nama:
+                        type: string
+                      id_role:
+                        type: number
+                      role:
+                        type: string
+                      id_project:
+                        type: string
+        '200_admin':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    example: false
+                  message:
+                    example: Dapatkan data user
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      username:
+                        type: string
+                      nama:
+                        type: string
+                      id_role:
+                        type: number
+                      role:
+                        type: string
+                      projects:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id_project:
+                              type: string
+        '200_superadmin':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    example: false
+                  message:
+                    example: Dapatkan data user
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      username:
+                        type: string
+                      nama:
+                        type: string
+                      id_role:
+                        type: number
+                      role:
+                        type: string
+        '401':
+          $ref: '#/components/schemas/AccountNotHaveAccess'  # Referensi untuk respons 401
+        '500':
+          $ref: '#/components/schemas/InternalServerError'  # Referensi untuk respons 500
+
+  /users/{username}:
+    get:
+      summary: Get satu data user
+      tags: [User]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: username
+          required: true
+          description: Username user yang dicari
+      responses:
+        '200_user':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    example: false
+                  message:
+                    example: Dapatkan data user
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      username:
+                        type: string
+                      nama:
+                        type: string
+                      id_role:
+                        type: number
+                      role:
+                        type: string
+                      id_project:
+                        type: string
+        '200_admin':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    example: false
+                  message:
+                    example: Dapatkan data user
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      username:
+                        type: string
+                      nama:
+                        type: string
+                      id_role:
+                        type: number
+                      role:
+                        type: string
+                      projects:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id_project:
+                              type: string
+        '200_superadmin':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    example: false
+                  message:
+                    example: Dapatkan data user
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      username:
+                        type: string
+                      nama:
+                        type: string
+                      id_role:
+                        type: number
+                      role:
+                        type: string
+        '401':
+          $ref: '#/components/schemas/AccountNotHaveAccess'  # Referensi untuk respons 401
+        '500':
+          $ref: '#/components/schemas/InternalServerError'  # Referensi untuk respons 500
+
+  /users:
+    get:
+      summary: Get semua data akun user - superadmin only
+      tags: [User]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          description: Ambil halaman nomor berapa
+        - in: query
+          name: size
+          description: Satu halaman akan ada berapa data
+        - in: query
+          name: free
+          description: Set "true" untuk hanya tampilkan pekerja yang sedang free (tidak terlibat dalam proyek)
+        - in: query
+          name: user
+          description: Set "true" untuk tampilkan hanya semua data user (pekerja) baik terlibat/tidak pada sebuah proyek
+        - in: query
+          name: pm
+          description: Set "true" untuk hanya tampilkan user "admin" (project manager) saja -> dimana PM bisa mengatur > 1 proyek
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    example: false
+                  message:
+                    example: Dapatkan data akun
+                  data:
+                    type: object
+                    properties:
+                      total_data:
+                        type: number
+                      page:
+                        type: number
+                      per_page:
+                        type: number
+                      akun:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                            username:
+                              type: string
+                            nama:
+                              type: string
+                            id_role:
+                              type: number
+                            role:
+                              type: string
+        '401':
+          $ref: '#/components/schemas/AccountNotHaveAccess'  # Referensi untuk respons 401
+        '500':
+          $ref: '#/components/schemas/InternalServerError'
+    post:
+      summary: Buat akun baru - superadmin only
+      tags:
+        - User
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                nama:
+                  type: string
+                id_role:
+                  type: number
+                  example: 3
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      username:
+                        type: string
+        '400':
+          $ref: '#/components/schemas/DataInputNotValid'
+        '401':
+          $ref: '#/components/schemas/AccountNotHaveAccess'
+        '500':
+          $ref: '#/components/schemas/InternalServerError'
+    patch:
+      summary: Edit info akun
+      tags:
+        - User
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id_user:
+                  type: string
+                nama:
+                  type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+        '400':
+          $ref: '#/components/schemas/DataInputNotValid'
+        '401':
+          $ref: '#/components/schemas/AccountNotHaveAccess'
+        '500':
+          $ref: '#/components/schemas/InternalServerError'
+    delete:
+      summary: Delete akun lain - superadmin only (NOT DEVELOPED)
+      tags:
+        - User
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id_user:
+                  type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+        '400':
+          $ref: '#/components/schemas/DataInputNotValid'
+        '401':
+          $ref: '#/components/schemas/AccountNotHaveAccess'
+        '500':
+          $ref: '#/components/schemas/InternalServerError'
+
+  /users/password:
+    patch:
+      summary: Edit password akun user
+      tags:
+        - User
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id_user:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+        '400':
+          $ref: '#/components/schemas/DataInputNotValid'
+        '401':
+          $ref: '#/components/schemas/AccountNotHaveAccess'
+        '500':
+          $ref: '#/components/schemas/InternalServerError'
+
+  /users/username:
+    patch:
+      summary: Edit username akun - superadmin only
+      tags:
+        - User
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id_user:
+                  type: string
+                new_username:
+                  type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+        '400':
+          $ref: '#/components/schemas/DataInputNotValid'
+        '401':
+          $ref: '#/components/schemas/AccountNotHaveAccess'
+        '500':
+          $ref: '#/components/schemas/InternalServerError'
+
+
+
+
+# ! ------------------------ ---- ------------------------ ! #
+# ! ------------------------ PROJECT ------------------------ ! #
+# ! ------------------------ ---- ------------------------ ! #
+  /projects/history:
+    get:
+      summary: Get semua data history project yang pernah dikerjakan sesuai role
+      tags:
+        - Project
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          description: Ambil halaman nomor berapa
+        - in: query
+          name: size
+          description: Satu halaman akan ada berapa data
+        - in: query
+          name: search
+          description: Kata kunci untuk mencari project berdasarkan nama project
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      total_data:
+                        type: number
+                      page:
+                        type: number
+                      per_page:
+                        type: number
+                      projects:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                            nama:
+                              type: string
+                            description:
+                              type: string
+                            target:
+                              type: string
+                            start_project:
+                              type: string
+                              example: 2020-01-12
+                            end_target_project:
+                              type: string
+                              example: 20221-10-31
+                            day_work_start:
+                              type: object
+                              properties:
+                                id:
+                                  type: number
+                                name:
+                                  type: string
+                            day_work_last:
+                              type: object
+                              properties:
+                                id:
+                                  type: number
+                                name:
+                                  type: string
+                            workhour:
+                              type: object
+                              properties:
+                                id:
+                                  type: string
+                                jam_masuk:
+                                  type: string
+                                  example: 08:00
+                                jam_selesai:
+                                  type: string
+                                  example: 17:00
+                                jam_istirahat_mulai:
+                                  type: string
+                                  example: 12:00
+                                jam_istirahat_selesai:
+                                  type: string
+                                  example: 13:00
+                            long:
+                              type: string
+                            lat:
+                              type: string
+                            pm:
+                              type: object
+                              properties:
+                                id:
+                                  type: string
+                                nama:
+                                  type: string
+                            on_progress:
+                              type: boolean
+                            on_track:
+                              type: boolean
+                            workers:
+                              type: array
+                              items:
+                                type: string
+        '401':
+          $ref: '#/components/schemas/AccountNotHaveAccess'
+        '500':
+          $ref: '#/components/schemas/InternalServerError'
+
+  /projects/{id_project}:
+    get:
+      summary: Get satu data project - selain superadmin - admin (hanya bisa get project yang sedang dikerjakan) dan user hanya bisa get data project yang sedang terlibat
+      tags:
+        - Project
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id_project
+          description: ID data ingin dicari
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      nama:
+                        type: string
+                      description:
+                        type: string
+                      target:
+                        type: string
+                      start_project:
+                        type: string
+                        example: 2020-01-12
+                      end_target_project:
+                        type: string
+                        example: 20221-10-31
+                      day_work_start:
+                        type: object
+                        properties:
+                          id:
+                            type: number
+                          name:
+                            type: string
+                      day_work_last:
+                        type: object
+                        properties:
+                          id:
+                            type: number
+                          name:
+                            type: string
+                      workhour:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                          jam_masuk:
+                            type: string
+                            example: 08:00
+                          jam_selesai:
+                            type: string
+                            example: 17:00
+                          jam_istirahat_mulai:
+                            type: string
+                            example: 12:00
+                          jam_istirahat_selesai:
+                            type: string
+                            example: 13:00
+                      long:
+                        type: string
+                      lat:
+                        type: string
+                      pm:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                          nama:
+                            type: string
+                      on_progress:
+                        type: boolean
+                      on_track:
+                        type: boolean
+                      project_summary:
+                        type: object
+                        properties:
+                          total_length_project_target:
+                            type: number
+                          total_day_from_start_now:
+                            type: number
+                          total_work_day_now:
+                            type: number
+                          total_non_work_day:
+                            type: number
+                          total_extra_day_work:
+                            type: number
+                      workers:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                            nama:
+                              type: string
+                      daily_notes:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            incomes:
+                              type: object
+                              properties:
+                                data:
+                                  type: string
+                                total:
+                                  type: number
+                                file:
+                                  type: string
+                            expenses:
+                              type: object
+                              properties:
+                                data:
+                                  type: string
+                                total:
+                                  type: number
+                                file:
+                                  type: string
+                            is_extra_day:
+                              type: boolean
+                            daily_confirmation:
+                              type: boolean
+                            daily_attendances:
+                              type: boolean
+                            date:
+                              type: string
+                            note_tomorrow:
+                              type: string
+                            worker_notes:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  id_user:
+                                    type: string
+                                  data:
+                                    type: string
+                            attendances:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  id_user:
+                                    type: string
+                                  attendances:
+                                    type: boolean
+                                  attendances_time:
+                                    type: string
+        '401':
+          $ref: '#/components/schemas/AccountNotHaveAccess'
+        '404':
+          $ref: '#/components/schemas/DataNotFound'
+        '500':
+          $ref: '#/components/schemas/InternalServerError'
+
+  /projects:
+    get:
+      summary: Get semua data project - selain superadmin - admin (hanya bisa get project yang sedang dikerjakan) dan user hanya bisa get data project yang sedang terlibat
+      tags:
+        - Project
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          description: Ambil halaman nomor berapa
+        - in: query
+          name: size
+          description: Satu halaman akan ada berapa data
+        - in: query
+          name: search
+          description: Kata kunci untuk cari project berdasarkan nama project
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      total_data:
+                        type: number
+                      page:
+                        type: number
+                      per_page:
+                        type: number
+                      projects:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                            nama:
+                              type: string
+                            description:
+                              type: string
+                            target:
+                              type: string
+                            start_project:
+                              type: string
+                              example: 2020-01-12
+                            end_target_project:
+                              type: string
+                              example: 20221-10-31
+                            day_work_start:
+                              type: object
+                              properties:
+                                id:
+                                  type: number
+                                name:
+                                  type: string
+                            day_work_last:
+                              type: object
+                              properties:
+                                id:
+                                  type: number
+                                name:
+                                  type: string
+                            workhour:
+                              type: object
+                              properties:
+                                id:
+                                  type: string
+                                jam_masuk:
+                                  type: string
+                                  example: 08:00
+                                jam_selesai:
+                                  type: string
+                                  example: 17:00
+                                jam_istirahat_mulai:
+                                  type: string
+                                  example: 12:00
+                                jam_istirahat_selesai:
+                                  type: string
+                                  example: 13:00
+                            long:
+                              type: string
+                            lat:
+                              type: string
+                            pm:
+                              type: object
+                              properties:
+                                id:
+                                  type: string
+                                nama:
+                                  type: string
+                            on_progress:
+                              type: boolean
+                            on_track:
+                              type: boolean
+                            workers:
+                              type: array
+                              items:
+                                type: string
+        '400':
+          $ref: '#/components/schemas/DataInputNotValid'
+        '401':
+          $ref: '#/components/schemas/AccountNotHaveAccess'
+        '500':
+          $ref: '#/components/schemas/InternalServerError'
+        '404':
+          $ref: '#/components/schemas/DataNotFound'
+
+    post:
+      summary: Post project baru - superadmin only
+      tags:
+        - Project
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nama:
+                  type: string
+                deskripsi:
+                  type: string
+                target:
+                  type: string
+                start_project:
+                  type: string
+                  example: 2023-10-15
+                end_target_project:
+                  type: string
+                  example: 2023-12-31
+                longitude:
+                  type: number
+                  example: -74.0060
+                latitude:
+                  type: number
+                  example: 40.7128
+                id_workhour:
+                  type: number
+                id_day_mulai:
+                  type: number
+                id_day_selesai:
+                  type: number
+                id_pm:
+                  type: string
+                id_users:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+        '400':
+          $ref: '#/components/schemas/DataInputNotValid'
+        '401':
+          $ref: '#/components/schemas/AccountNotHaveAccess'
+        '500':
+          $ref: '#/components/schemas/InternalServerError'
+
+    patch:
+      summary: Edit informasi project - superadmin only
+      tags:
+        - Project
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id_project:
+                  type: string
+                nama:
+                  type: string
+                description:
+                  type: string
+                target:
+                  type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+        '401':
+          $ref: '#/components/schemas/AccountNotHaveAccess'
+        '404':
+          $ref: '#/components/schemas/DataNotFound'
+        '500':
+          $ref: '#/components/schemas/InternalServerError'
+
+    delete:
+      summary: Delete satu data project (NOT DEVELOPED) - superadmin only
+      tags:
+        - Project
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id_project:
+                  type: number
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+        '401':
+          $ref: '#/components/schemas/AccountNotHaveAccess'
+        '404':
+          $ref: '#/components/schemas/DataNotFound'
+        '500':
+          $ref: '#/components/schemas/InternalServerError'
+
+  /projects/done:
+    patch:
+      summary: Ubah status proyek menjadi telah selesai - superadmin only
+      tags:
+        - Project
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id_project:
+                  type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+        '401':
+          $ref: '#/components/schemas/AccountNotHaveAccess'
+        '404':
+          $ref: '#/components/schemas/DataNotFound'
+        '500':
+          $ref: '#/components/schemas/InternalServerError'
+
+
+
+
+
+# ! ------------------------ ---- ------------------------ ! #
+# ! ------------------------ PROJECT DAILY-NOTES ------------------------ ! #
+# ! ------------------------ ---- ------------------------ ! #
+  /projects/daily-notes/workers:
+    get:
+      summary: Get data absensi dan catatan user workers pada sebuah project - workers only
+      tags:
+        - Project-DailyNotes
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          description: Ambil halaman nomor berapa
+        - in: query
+          name: size
+          description: Satu halaman akan ada berapa data
+        - in: query
+          name: id_project
+          description: ID data ingin dicari
+        - in: query
+          name: from_date
+          description: Cari summary dari tanggal berapa
+        - in: query
+          name: to_date
+          description: Cari summary sampai tanggal berapa
+        - in: query
+          name: is_extra_day
+          description: Set "true" untuk hanya tampilkan data dari hari extra_day  
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    example: false
+                  message:
+                    example: Dapatkan data keuangan
+                  data:
+                    type: object
+                    properties:
+                      project_summary:
+                        type: object
+                        properties:
+                          nama:
+                            type: string
+                          description:
+                            type: string
+                          pm:
+                            type: object
+                            properties:
+                              id_pm:
+                                type: string
+                              nama:
+                                type: string   
+                      user_attendance_summary:
+                        type: object
+                        properties:
+                          total_work_day:
+                            type: number    
+                          total_attendance:
+                            type: number   
+                          user_attendance_percentage:
+                            type: number   
+                          total_user_notes:
+                            type: number          
+                      user_daily_notes:
+                        type: object
+                        properties:
+                          total_data:
+                            type: number
+                          page:
+                            type: number
+                          per_page:
+                            type: number
+                          data:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                date:
+                                  type: string
+                                is_extra_day:
+                                  type: boolean
+                                id_user:
+                                  type: string
+                                attendances: 
+                                  type: boolean
+                                attendances_time:
+                                  type: string     
+                                worker_note:
+                                  type: string     
+        '401':
+          $ref: '#/components/schemas/AccountNotHaveAccess'
+        '404':
+          $ref: '#/components/schemas/DataNotFound'
+        '500':
+          $ref: '#/components/schemas/InternalServerError'
+
+    post:
+      summary: Post catatan harian oleh workers - workers only
+      tags:
+        - Project-DailyNotes
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id_project:
+                  type: string
+                data:
+                  type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    example: false
+                  message:
+                    example: Berhasil update workers note
+        '401':
+          $ref: '#/components/schemas/AccountNotHaveAccess'
+        '404':
+          $ref: '#/components/schemas/DataNotFound'
+        '500':
+          $ref: '#/components/schemas/InternalServerError'
+
+  /projects/daily-notes/finances:
+    get:
+      summary: Get data keuangan dari sebuah project
+      tags:
+        - Project-DailyNotes
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: id_project
+          description: ID data ingin dicari
+        - in: query
+          name: from_date
+          description: Cari summary dari tanggal berapa
+        - in: query
+          name: to_date
+          description: Cari summary sampai tanggal berapa
+        - in: query
+          name: is_extra_day
+          description: Cari hanya data dari note extra day, bernilai benar set dengan "true"     
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    example: false
+                  message:
+                    example: Dapatkan data keuangan
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        start_date:
+                          type: string
+                        end_date:
+                          type: string
+                        daily_data:
+                          type: object
+                          properties:
+                            date:
+                              type: string
+                            is_extra_day:
+                              type: boolean
+                            incomes:
+                              type: object
+                              properties:
+                                data:
+                                  type: string
+                                total:
+                                  type: number
+                                file:
+                                  type: string     
+                            expenses:
+                              type: object
+                              properties:
+                                data:
+                                  type: string
+                                total:
+                                  type: number   
+                                file:
+                                  type: string   
+                        total_incomes:
+                          type: number      
+                        total_expenses:
+                          type: number      
+                        total:
+                          type: number
+
+        '401':
+          $ref: '#/components/schemas/AccountNotHaveAccess'
+        '404':
+          $ref: '#/components/schemas/DataNotFound'
+        '500':
+          $ref: '#/components/schemas/InternalServerError'
+
+  /projects/daily-notes:
+    get:
+      summary: Get data daily-notes dari sebuah project
+      tags:
+        - Project-DailyNotes
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: id_project
+          description: ID data ingin dicari
+        - in: query
+          name: page
+          description: Ambil halaman nomor berapa
+        - in: query
+          name: size
+          description: Satu halaman akan ada berapa data
+        - in: query
+          name: today
+          description: Set "true" untuk hanya dapatkan data hari ini
+        - in: query
+          name: date
+          description: Set dengan format "yyyy-MM-dd" dan cari tanggal sesuai
+        - in: query
+          name: from_date
+          description: Cari daily-notes dari tanggal berapa
+        - in: query
+          name: to_date
+          description: Cari daily-notes sampai tanggal berapa
+      responses:
+        '200_all_or_with_from_to_date':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    example: false
+                  message:
+                    example: Dapatkan data daily-notes
+                  data:
+                    type: object
+                    properties:
+                      total_data:
+                        type: number
+                      page:
+                        type: number
+                      per_page:
+                        type: number
+                      daily_notes:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            _id:
+                              type: string
+                            is_extra_day:
+                              type: boolean
+                            daily_attendances:
+                              type: boolean
+                            daily_confirmation:
+                              type: boolean
+                            date:
+                              type: string
+                            note_tomorrow:
+                              type: string
+                            incomes:
+                              type: object
+                              properties:
+                                data:
+                                  type: string
+                                total:
+                                  type: number
+                                file:
+                                  type: string
+                            expenses:
+                              type: object
+                              properties:
+                                data:
+                                  type: string
+                                total:
+                                  type: number
+                                file:
+                                  type: string
+                            workers_notes:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  id_user:
+                                    type: string
+                                  data:
+                                    type: string
+                                  _id:
+                                    type: string
+                                  attendances:
+                                    type: array
+                                    items:
+                                      type: object
+                                      properties:
+                                        id_user:
+                                          type: string
+                                        attendances:
+                                          type: boolean
+                                        _id:
+                                          type: string
+        '200_today':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    example: false
+                  message:
+                    example: Dapatkan data daily-notes
+                  data:
+                    type: object
+                    properties:
+                      _id:
+                        type: string
+                      is_extra_day:
+                        type: boolean
+                      daily_attendances:
+                        type: boolean
+                      daily_confirmation:
+                        type: boolean
+                      date:
+                        type: string
+                      note_tomorrow:
+                        type: string
+                      incomes:
+                        type: object
+                        properties:
+                          data:
+                            type: string
+                          total:
+                            type: number
+                          file:
+                            type: string
+                      expenses:
+                        type: object
+                        properties:
+                          data:
+                            type: string
+                          total:
+                            type: number
+                          file:
+                            type: string
+                      workers_notes:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id_user:
+                              type: string
+                            data:
+                              type: string
+                            _id:
+                              type: string
+                            attendances:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  id_user:
+                                    type: string
+                                  attendances:
+                                    type: boolean
+                                  _id:
+                                    type: string
+                      today_note_from_yesterday:
+                        type: string
+                      weather_prediction:
+                        type: object
+                        properties:
+                          _id:
+                            type: string
+                          id_project:
+                            type: string
+                          timezone:
+                            type: string
+                          elevation:
+                            type: number
+                          unit:
+                            type: object
+                            properties:
+                              temperature:
+                                type: string
+                              precipitation:
+                                type: string
+                          date:
+                            type: string
+                          hourly:
+                            type: array
+                            items:
+                              type: string
+                          temp_forecast:
+                            type: array
+                            items:
+                              type: number
+                          precipitation_probability:
+                            type: array
+                            items:
+                              type: number
+                          summary:
+                            type: array
+                            items:
+                              type: array
+                              items:
+                                type: string
+        '200_selected_one_date':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    example: false
+                  message:
+                    example: Dapatkan data daily-notes
+                  data:
+                    type: object
+                    properties:
+                      _id:
+                        type: string
+                      is_extra_day:
+                        type: boolean
+                      daily_attendances:
+                        type: boolean
+                      daily_confirmation:
+                        type: boolean
+                      date:
+                        type: string
+                      note_tomorrow:
+                        type: string
+                      incomes:
+                        type: object
+                        properties:
+                          data:
+                            type: string
+                          total:
+                            type: number
+                          file:
+                            type: string
+                      expenses:
+                        type: object
+                        properties:
+                          data:
+                            type: string
+                          total:
+                            type: number
+                          file:
+                            type: string
+                      workers_notes:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id_user:
+                              type: string
+                            data:
+                              type: string
+                            _id:
+                              type: string
+                            attendances:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  id_user:
+                                    type: string
+                                  attendances:
+                                    type: boolean
+                                  _id:
+                                    type: string
+        '400':
+          $ref: '#/components/schemas/DataInputNotValid'
+        '401':
+          $ref: '#/components/schemas/AccountNotHaveAccess'
+        '404':
+          $ref: '#/components/schemas/DataNotFound'
+        '500':
+          $ref: '#/components/schemas/InternalServerError'
+
+    post:
+      summary: Post daily-notes baru
+      tags:
+        - Project-DailyNotes
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id_project:
+                  type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    example: false
+                  message:
+                    example: Berhasil buat daily notes baru
+        '400':
+          $ref: '#/components/schemas/DataInputNotValid'
+        '401':
+          $ref: '#/components/schemas/AccountNotHaveAccess'
+        '500':
+          $ref: '#/components/schemas/InternalServerError'
+
+  /projects/daily-notes/workers/delete:
+    post:
+      summary: Hapus data daily notes user - workers only
+      tags:
+        - Project-DailyNotes
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id_project:
+                  type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    example: false
+                  message:
+                    example: Berhasil hapus data daily-notes user
+        '401':
+          $ref: '#/components/schemas/AccountNotHaveAccess'
+        '404':
+          $ref: '#/components/schemas/DataNotFound'
+        '500':
+          $ref: '#/components/schemas/InternalServerError'
+
+  /projects/daily-notes/attendances/confirm:
+    post:
+      summary: Post Konfirmasi absen harian
+      tags:
+        - Project-DailyNotes
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id_project:
+                  type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    example: false
+                  message:
+                    example: Berhasil Update Konfirmasi absen harian
+        '401':
+          $ref: '#/components/schemas/AccountNotHaveAccess'
+        '404':
+          $ref: '#/components/schemas/DataNotFound'
+        '500':
+          $ref: '#/components/schemas/InternalServerError'
+
+  /projects/daily-notes/attendances:
+    post:
+      summary: Post absen harian oleh workers - workers only
+      tags:
+        - Project-DailyNotes
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id_project:
+                  type: string
+                use_qr:
+                  type: boolean
+                qr_code:
+                  type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    example: false
+                  message:
+                    example: User {username} berhasil absen untuk hari {tanggal} - {waktu}
+        '401':
+          $ref: '#/components/schemas/AccountNotHaveAccess'
+        '404':
+          $ref: '#/components/schemas/DataNotFound'
+        '500':
+          $ref: '#/components/schemas/InternalServerError'
+
+  /projects/daily-notes/tomorrow:
+    post:
+      summary: Post catatan dari project untuk hari besok
+      tags:
+        - Project-DailyNotes
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id_project:
+                  type: string
+                data:
+                  type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    example: false
+                  message:
+                    example: Berhasil ubah data note untuk hari besok
+        '401':
+          $ref: '#/components/schemas/AccountNotHaveAccess'
+        '404':
+          $ref: '#/components/schemas/DataNotFound'
+        '500':
+          $ref: '#/components/schemas/InternalServerError'
+
+  /projects/daily-notes/confirm:
+    post:
+      summary: Post konfirmasi daily notes
+      tags:
+        - Project-DailyNotes
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id_project:
+                  type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    example: false
+                  message:
+                    example: Berhasil ubah status daily notes
+        '401':
+          $ref: '#/components/schemas/AccountNotHaveAccess'
+        '404':
+          $ref: '#/components/schemas/DataNotFound'
+        '500':
+          $ref: '#/components/schemas/InternalServerError'
+
+  /projects/daily-notes/{finance}/delete:
+    post:
+      summary: Delete daily-notes data - admin only
+      tags:
+        - Project-DailyNotes
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: finance
+          description: sesuaikan dengan data ingin di post "incomes" / "expenses"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id_project:
+                  type: string
+                file_only:
+                  type: boolean
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    example: false
+                  message:
+                    example: Berhasil hapus data daily notes
+        '401':
+          $ref: '#/components/schemas/AccountNotHaveAccess'
+        '404':
+          $ref: '#/components/schemas/DataNotFound'
+        '500':
+          $ref: '#/components/schemas/InternalServerError'
+
+  /projects/daily-notes/{finance}:
+    post:
+      summary: Post incomes/ expenses pada daily notes - admin only
+      tags:
+        - Project-DailyNotes
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: finance
+          description: sesuaikan dengan data ingin di post "incomes" / "expenses"
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                id_project:
+                  type: string
+                data:
+                  type: string
+                total:
+                  type: number
+                file:
+                  type: file
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    example: false
+                  message:
+                    example: Berhasil tambah data baru
+        '401':
+          $ref: '#/components/schemas/AccountNotHaveAccess'
+        '404':
+          $ref: '#/components/schemas/DataNotFound'
+        '500':
+          $ref: '#/components/schemas/InternalServerError'
+
+
+
+
+
+# ! ------------------------ ---- ------------------------ ! #
+# ! ------------------------ ROLE ------------------------ ! #
+# ! ------------------------ ---- ------------------------ ! #
+  /roles:
+    get:
+      summary: Get semua data role
+      tags: [Role]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    example: false
+                  message:
+                    example: Dapatkan data role
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        nama:
+                          type: string
+        '400':
+          $ref: '#/components/schemas/DataInputNotValid' 
+        '401':
+          $ref: '#/components/schemas/AccountNotHaveAccess' 
+        '500':
+          $ref: '#/components/schemas/InternalServerError' 
+
+    patch:
+      summary: Edit nama role
+      tags: [Role]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: number
+                nama:
+                  type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    example: false
+                  message:
+                    example: Berhasil ubah nama role
+        '400':
+          $ref: '#/components/schemas/DataInputNotValid' 
+        '401':
+          $ref: '#/components/schemas/AccountNotHaveAccess'
+        '500':
+          $ref: '#/components/schemas/InternalServerError'
+
+
+
+
+# ! ------------------------ ---- ------------------------ ! #
+# ! ------------------------ WAKTU KERJA ------------------------ ! #
+# ! ------------------------ ---- ------------------------ ! #
+  /workhours/{id_workhour}:
+    get:
+      summary: Get satu data workhour (Waktu Kerja)
+      tags:
+        - Waktu Kerja
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id_workhour
+          description: ID data ingin dicari
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    example: false
+                  message:
+                    example: Dapatkan satu data workhour
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      jam_masuk:
+                        example: 08:00
+                      jam_selesai:
+                        example: 18:00
+                      jam_istirahat_mulai:
+                        example: 12:00
+                      jam_istirahat_selesai:
+                        example: 13:00
+        '401':
+          $ref: '#/components/schemas/AccountNotHaveAccess'
+        '404':
+          $ref: '#/components/schemas/DataNotFound'
+        '500':
+          $ref: '#/components/schemas/InternalServerError'
+
+  /workhours:
+    get:
+      summary: Get semua data workhour (Waktu Kerja)
+      tags:
+        - Waktu Kerja
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          description: Ambil halaman nomor berapa
+        - in: query
+          name: size
+          description: Satu halaman akan ada berapa data
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    example: false
+                  message:
+                    example: Data waktu kerja
+                  data:
+                    type: object
+                    properties:
+                      total_data:
+                        type: number
+                      page:
+                        type: number
+                      per_page:
+                        type: number
+                      workhours:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                            jam_masuk:
+                              example: 08:00
+                            jam_selesai:
+                              example: 18:00
+                            jam_istirahat_mulai:
+                              example: 12:00
+                            jam_istirahat_selesai:
+                              example: 13:00
+        '401':
+          $ref: '#/components/schemas/AccountNotHaveAccess'
+        '500':
+          $ref: '#/components/schemas/InternalServerError'
+
+    post:
+      summary: Post informasi baru workhour (Waktu Kerja)
+      tags:
+        - Waktu Kerja
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                mulai:
+                  type: string
+                  example: 08:00
+                selesai:
+                  type: string
+                  example: 17:00
+                istirahat_mulai:
+                  type: string
+                  example: 12:00
+                istirahat_selesai:
+                  type: string
+                  example: 13:00
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    example: false
+                  message:
+                    example: Berhasil tambah data informasi waktu kerja
+        '400':
+          $ref: '#/components/schemas/DataInputNotValid'
+        '401':
+          $ref: '#/components/schemas/AccountNotHaveAccess'
+        '500':
+          $ref: '#/components/schemas/InternalServerError'
+
+    patch:
+      summary: Edit informasi workhour (Waktu Kerja)
+      tags:
+        - Waktu Kerja
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id_workhour:
+                  type: string
+                mulai:
+                  type: string
+                  example: 08:00
+                selesai:
+                  type: string
+                  example: 17:00
+                istirahat_mulai:
+                  type: string
+                  example: 12:00
+                istirahat_selesai:
+                  type: string
+                  example: 13:00
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    example: false
+                  message:
+                    example: Berhasil ubah data informasi waktu kerja
+        '401':
+          $ref: '#/components/schemas/AccountNotHaveAccess'
+        '404':
+          $ref: '#/components/schemas/DataNotFound'
+        '500':
+          $ref: '#/components/schemas/InternalServerError'
+
+    delete:
+      summary: Delete satu data informasi workhour (Waktu Kerja)
+      tags:
+        - Waktu Kerja
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id_workhour:
+                  type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    example: false
+                  message:
+                    example: Berhasil delete data informasi waktu kerja
+        '401':
+          $ref: '#/components/schemas/AccountNotHaveAccess'
+        '404':
+          $ref: '#/components/schemas/DataNotFound'
+        '500':
+          $ref: '#/components/schemas/InternalServerError'
+
+
+
+
+# ! ------------------------ ---- ------------------------ ! #
+# ! ------------------------ DAYS ------------------------ ! #
+# ! ------------------------ ---- ------------------------ ! #
+  /days:
+    get:
+      summary: Get semua data day (hari)
+      tags:
+        - Days (Hari)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Dapatkan data day (hari)
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        nama:
+                          type: string
+        '401':
+          $ref: '#/components/schemas/AccountNotHaveAccess'
+        '500':
+          $ref: '#/components/schemas/InternalServerError'
+
+
+
+
+
+# ! ------------------------ ---- ------------------------ ! #
+# ! ------------------------ CRON FUNCTION ------------------------ ! #
+# ! ------------------------ ---- ------------------------ ! #
+  /cron-funcs:
+    get:
+      summary: Get data cron function
+      tags:
+        - Cron Function
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Sukses mendapatkan data cron function
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    example: false
+                  message:
+                    example: Get data cron function
+                  data:
+                    type: object
+                    properties:
+                      cron_id:
+                        type: string
+                      cron_status:
+                        type: boolean
+                      cron_interval_minute:
+                        type: number
+        '401':
+          $ref: '#/components/schemas/AccountNotHaveAccess'
+        '500':
+          $ref: '#/components/schemas/InternalServerError'
+
+  /cron-funcs/switch:
+    post:
+      summary: Mengubah status cron function menjadi aktif atau non-aktif
+      tags:
+        - Cron Function
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Sukses mengubah status cron function
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    example: false
+                  message:
+                    example: Sukses mengubah status cron function
+        '401':
+          $ref: '#/components/schemas/AccountNotHaveAccess'
+        '404':
+          $ref: '#/components/schemas/DataNotFound'
+        '500':
+          $ref: '#/components/schemas/InternalServerError'
+
+  /cron-funcs/intervals:
+    patch:
+      summary: Mengupdate atau mengubah interval cron function (interval dalam menit)
+      tags:
+        - Cron Function
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                new_interval:
+                  type: number
+      responses:
+        '200':
+          description: Sukses mengedit interval cron function
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    example: false
+                  message:
+                    example: Sukses mengedit interval cron function
+        '400':
+          $ref: '#/components/schemas/DataInputNotValid'
+        '401':
+          $ref: '#/components/schemas/AccountNotHaveAccess'
+        '500':
+          $ref: '#/components/schemas/InternalServerError'
+
+
+
+
+# ! ------------------------ ---- ------------------------ ! #
+# ! ------------------------ DASHBOARD ---------------------- ! #
+# ! ------------------------ ---- ------------------------ ! #
+  /dashboard:
+    get:
+      summary: Get Dashboard data
+      tags:
+        - Dashboard
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: deskripsi
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Data dashboard
+                  data:
+                    type: object
+                    properties:
+                      total_project:
+                        type: number
+                        example: 10
+                      total_project_done:
+                        type: number
+                        example: 5
+                      total_project_on_progress:
+                        type: number
+                        example: 5
+                      total_user:
+                        type: number
+                        example: 100
+                      total_worker:
+                        type: number
+                        example: 60
+                      total_work_worker:
+                        type: number
+                        example: 30
+                      total_free_worker:
+                        type: number
+                        example: 30
+                      total_admin:
+                        type: number
+                        example: 40
+                      total_work_admin:
+                        type: number
+                        example: 20
+                      total_free_admin:
+                        type: number
+                        example: 20
+        '401':
+          $ref: '#/components/schemas/AccountNotHaveAccess'
+        '500':
+          $ref: '#/components/schemas/InternalServerError'

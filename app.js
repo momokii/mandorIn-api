@@ -10,15 +10,15 @@ const morgan = require('morgan')
 const yamljs = require('yamljs')
 
 // * yaml file oas 2.0 spec doc
-const opeanapispec = yamljs.load('./swagger-doc/mandorin-oas-2-0.yaml')
+const opeanapispec = yamljs.load('./swagger-doc/mandorin-oas-3-0.yaml')
 
 // * CONST
 const PORT = process.env.PORT
 
 // * ROUTES
 const authRoutes = require('./routes/auths')
-const cronRoutes = require('./routes/cron-func')
-const dayRoutes = require('./routes/days')
+const cronRoutes = require('./routes/cron-func') 
+const dayRoutes = require('./routes/days') 
 const dahsboardRoutes = require('./routes/dashboard')
 const userRoutes = require('./routes/users')
 const roleRoutes = require('./routes/roles')
